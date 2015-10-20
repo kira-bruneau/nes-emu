@@ -23,14 +23,6 @@ typedef struct CPU {
 
 CPU * cpu_new();
 void cpu_reset(CPU * cpu);
-
-byte cpu_read_pc(CPU * cpu);
-uint16_t cpu_read_pc16(CPU * cpu);
-
 void cpu_eval_next(CPU * cpu);
-/* void cpu_eval_control(byte opcode); */
-/* void cpu_eval_alu(byte opcode); */
-/* void cpu_eval_rmw(byte opcode); */
-/* void cpu_eval_unofficial(byte opcode) */
 
 #endif
