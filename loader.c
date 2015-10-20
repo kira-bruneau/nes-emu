@@ -5,6 +5,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "util.h"
+
 /**
  * Find ROM files recursively in a directory
  */
@@ -82,28 +84,31 @@ static GFile * select_rom(GList * rom_list) {
  */
 static void read_rom(GFile * rom_file) {
   GInputStream * stream = (GInputStream *)g_file_read(rom_file, NULL, NULL);
+  if (!stream) {
+    return;
+  }
 
   // Read header
   struct NESHeader {
-    unsigned char magic[4];
-    unsigned char prg_rom_size;
-    unsigned char chr_rom_size;
+    byte magic[4];
+    byte prg_rom_size;
+    byte chr_rom_size;
 
     // Flags 6
-    unsigned char mirroring        : 1;
-    unsigned char prg_ram          : 1;
-    unsigned char trainer          : 1;
-    unsigned char four_screen_vram : 1;
-    unsigned char mapper_lower     : 4;
+    byte mirroring        : 1;
+    byte prg_ram          : 1;
+    byte trainer          : 1;
+    byte four_screen_vram : 1;
+    byte mapper_lower     : 4;
 
     // Flags 7
-    unsigned char vs_unisystem : 1;
-    unsigned char playchoice10 : 1;
-    unsigned char version      : 2;
-    unsigned char mapper_upper : 4;
+    byte vs_unisystem : 1;
+    byte playchoice10 : 1;
+    byte version      : 2;
+    byte mapper_upper : 4;
 
-    unsigned char prg_ram_size;
-    unsigned char zero[7];
+    byte prg_ram_size;
+    byte zero[7];
   } header;
 
   g_input_stream_read(stream, &header, sizeof(header), NULL, NULL);
