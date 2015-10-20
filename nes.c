@@ -8,7 +8,7 @@ NES * nes_new(GFile * rom_file) {
   NES * nes = g_malloc(sizeof(NES));
 
   Cartridge * cartridge = cartridge_new(rom_file);
-  Memory * memory = memory_new(cartridge, 2048);
+  Memory * memory = memory_new(cartridge);
   nes->cpu = cpu_new(memory);
 
   char buffer[256];
