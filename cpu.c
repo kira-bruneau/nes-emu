@@ -3,12 +3,101 @@
 
 #include "cpu.h"
 
+struct CPU {
+  uint16_t pc;
+  byte sp;
+  byte a, x, y;
+
+  // CCR
+  byte n : 1;
+  byte v : 1;
+  byte b : 1;
+  byte d : 1;
+  byte i : 1;
+  byte z : 1;
+  byte c : 1;
+
+  Memory * mem;
+};
+
 CPU * cpu_new(Memory * mem) {
   CPU * cpu = g_malloc(sizeof(CPU));
   cpu->mem = mem;
   cpu_reset(cpu);
   return cpu;
 }
+
+void cpu_reset(CPU * cpu) {
+  cpu_write_pc16(cpu, 0xC000);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// TODO:
+void cpu_eval_jsr(CPU * cpu) {
+  uint16_t addr = cpu_read_pc16(cpu);
+  printf("JMP %04X\n", addr);
+  cpu_write_pc16(cpu, addr);
+}
+
+void cpu_eval_sec(CPU * cpu) {
+  printf("SEC\n");
+  cpu_write_c(cpu, 1);
+}
+
+void cpu_eval_jmp(CPU * cpu) {
+  uint16_t addr = cpu_read_pc16(cpu);
+  printf("JMP %04X\n", addr);
+  cpu_write_pc16(cpu, addr);
+}
+
+void cpu_eval_stx(CPU * cpu) {
+  byte addr = cpu_read_pc(cpu);
+  byte val = cpu_read_x(cpu);
+  printf("STX $%02X = %02X\n", addr, val);
+  memory_write(cpu->mem, addr, val);
+}
+
+void cpu_eval_ldx(CPU * cpu) {
+  byte val = cpu_read_pc(cpu);
+  printf("LDX #$%02X\n", val);
+  cpu_write_x(cpu, val);
+}
+
+void cpu_eval_nop(CPU * cpu) {
+  printf("NOP\n");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void cpu_eval_next(CPU * cpu) {
+  byte opcode = cpu_read_pc(cpu);
+  switch (opcode) {
+  case 0x20:
+    cpu_eval_jsr(cpu);
+    break;
+  case 0x38:
+    cpu_eval_sec(cpu);
+    break;
+  case 0x4C:
+    cpu_eval_jmp(cpu);
+    break;
+  case 0x86:
+    cpu_eval_stx(cpu);
+    break;
+  case 0xA2:
+    cpu_eval_ldx(cpu);
+    break;
+  case 0xEA:
+    cpu_eval_nop(cpu);
+    break;
+  default:
+    fprintf(stderr, "Unknown opcode %X\n", opcode);
+    break;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Program counter write and read functions
 byte cpu_read_pc(CPU * cpu) {
@@ -118,76 +207,4 @@ byte cpu_read_c(CPU * cpu) {
 
 void cpu_write_c(CPU * cpu, byte val) {
   cpu->c = val;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void cpu_reset(CPU * cpu) {
-  cpu_write_pc16(cpu, 0xC000);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// TODO:
-void cpu_eval_jsr(CPU * cpu) {
-  uint16_t addr = cpu_read_pc16(cpu);
-  printf("JMP %04X\n", addr);
-  cpu_write_pc16(cpu, addr);
-}
-
-void cpu_eval_sec(CPU * cpu) {
-  printf("SEC\n");
-  cpu_write_c(cpu, 1);
-}
-
-void cpu_eval_jmp(CPU * cpu) {
-  uint16_t addr = cpu_read_pc16(cpu);
-  printf("JMP %04X\n", addr);
-  cpu_write_pc16(cpu, addr);
-}
-
-void cpu_eval_stx(CPU * cpu) {
-  byte addr = cpu_read_pc(cpu);
-  byte val = cpu_read_x(cpu);
-  printf("STX $%02X = %02X\n", addr, val);
-  memory_write(cpu->mem, addr, val);
-}
-
-void cpu_eval_ldx(CPU * cpu) {
-  byte val = cpu_read_pc(cpu);
-  printf("LDX #$%02X\n", val);
-  cpu_write_x(cpu, val);
-}
-
-void cpu_eval_nop(CPU * cpu) {
-  printf("NOP\n");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void cpu_eval_next(CPU * cpu) {
-  byte opcode = cpu_read_pc(cpu);
-  switch (opcode) {
-  case 0x20:
-    cpu_eval_jsr(cpu);
-    break;
-  case 0x38:
-    cpu_eval_sec(cpu);
-    break;
-  case 0x4C:
-    cpu_eval_jmp(cpu);
-    break;
-  case 0x86:
-    cpu_eval_stx(cpu);
-    break;
-  case 0xA2:
-    cpu_eval_ldx(cpu);
-    break;
-  case 0xEA:
-    cpu_eval_nop(cpu);
-    break;
-  default:
-    fprintf(stderr, "Unknown opcode %X\n", opcode);
-    break;
-  }
 }
