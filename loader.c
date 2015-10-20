@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #include "util.h"
+#include "cartridge.h"
 
 /**
  * Find ROM files recursively in a directory
@@ -82,10 +83,10 @@ static GFile * select_rom(GList * rom_list) {
 /*
  * Parse a NES ROM file
  */
-static void read_rom(GFile * rom_file) {
+Cartridge * read_rom(GFile * rom_file) {
   GInputStream * stream = (GInputStream *)g_file_read(rom_file, NULL, NULL);
   if (!stream) {
-    return;
+    return NULL;
   }
 
   // Read header
@@ -95,11 +96,11 @@ static void read_rom(GFile * rom_file) {
     byte chr_rom_size;
 
     // Flags 6
-    byte mirroring        : 1;
-    byte prg_ram          : 1;
-    byte trainer          : 1;
-    byte four_screen_vram : 1;
-    byte mapper_lower     : 4;
+    byte mirror_vert  : 1;
+    byte prg_ram      : 1;
+    byte trainer      : 1;
+    byte mirror_quad  : 1;
+    byte mapper_lower : 4;
 
     // Flags 7
     byte vs_unisystem : 1;
@@ -113,6 +114,12 @@ static void read_rom(GFile * rom_file) {
 
   g_input_stream_read(stream, &header, sizeof(header), NULL, NULL);
 
+  static byte nes_magic[] = {'N', 'E', 'S', 0x1A};
+  if (memcmp(&header.magic, nes_magic, 4)) {
+    fprintf(stderr, "ERROR: File is not a ROM file!\n");
+    return NULL;
+  }
+
   // Read trainer (don't worry about this yet)
   if (header.trainer) {
     g_input_stream_skip(stream, 512, NULL, NULL);
@@ -120,15 +127,37 @@ static void read_rom(GFile * rom_file) {
 
   // Read PRG ROM data
   size_t prg_rom_size = 16384 * header.prg_rom_size;
-  int * prg_rom = g_malloc(prg_rom_size);
+  byte * prg_rom = g_malloc(prg_rom_size);
   g_input_stream_read(stream, prg_rom, prg_rom_size, NULL, NULL);
   g_free(prg_rom);
 
   // Read CHR ROM data
   size_t chr_rom_size = 8192 * header.chr_rom_size;
-  void * chr_rom = g_malloc(chr_rom_size);
+  byte * chr_rom = g_malloc(chr_rom_size);
   g_input_stream_read(stream, &chr_rom, chr_rom_size, NULL, NULL);
   g_free(chr_rom);
+
+  // Mapper
+  int mapper = (header.mapper_lower) + (header.mapper_upper << 4);
+
+  // Mirroring
+  Mirror mirror;
+  if (header.mirror_quad) {
+    mirror = MIRROR_QUAD;
+  } else if (header.mirror_vert) {
+    mirror = MIRROR_VERTICAL;
+  } else {
+    mirror = MIRROR_HORIZONTAL;
+  }
+
+  Cartridge * cartridge = g_malloc(sizeof(Cartridge));
+  cartridge->prg_rom = prg_rom;
+  cartridge->chr_rom = chr_rom;
+  cartridge->mapper = mapper;
+  cartridge->mirror = mirror;
+  cartridge->prg_ram = header.prg_ram;
+
+  return cartridge;
 }
 
 int main() {
