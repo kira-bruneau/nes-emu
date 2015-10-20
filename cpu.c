@@ -80,12 +80,14 @@ void cpu_eval_ldx(CPU * cpu) {
   byte val = cpu_next_8(cpu);
   printf("LDX #$%02X\n", val);
   cpu_write_x(cpu, val);
+  cpu_write_z(cpu, val == 0);
 }
 
 void cpu_eval_lda(CPU * cpu) {
   byte val = cpu_next_8(cpu);
   printf("LDA #$%02X\n", val);
   cpu_write_a(cpu, val);
+  cpu_write_z(cpu, val == 0);
 }
 
 void cpu_eval_bcs(CPU * cpu) {
@@ -102,6 +104,7 @@ void cpu_eval_nop(CPU * cpu) {
 }
 
 void cpu_next_instr(CPU * cpu) {
+  printf("%04X  ", cpu_read_pc(cpu));
   byte opcode = cpu_next_8(cpu);
   switch (opcode) {
   case 0x18:
