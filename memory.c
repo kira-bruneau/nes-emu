@@ -1,4 +1,5 @@
 #include <glib.h>
+#include <assert.h>
 
 #include "memory.h"
 
@@ -13,6 +14,7 @@ byte memory_read(Memory * mem, uint16_t addr) {
   if (addr < 0x2000) { // I don't know if this is right, but it's working so far
     return mem->raw[addr % 0x0800];
   } else if (addr > 0x8000) { // I don't know if this is right, but it's working so far
+    assert(mem->cartridge != NULL);
     return cartridge_read(mem->cartridge, addr - 0x8000);
   }
 
