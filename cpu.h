@@ -6,14 +6,18 @@
 
 typedef struct CPU CPU;
 
+// Intialization functions
 CPU * cpu_new();
 void cpu_reset(CPU * cpu);
-void cpu_eval_next(CPU * cpu);
 
-// Register write and read functions
-byte cpu_read_pc(CPU * cpu);
-uint16_t cpu_read_pc16(CPU * cpu);
-void cpu_write_pc16(CPU * cpu, uint16_t val);
+// Program advancement functions
+void cpu_next_instr(CPU * cpu);
+byte cpu_next_8(CPU * cpu);
+uint16_t cpu_next_16(CPU * cpu);
+
+// Read and write functions for registers
+uint16_t cpu_read_pc(CPU * cpu);
+void cpu_write_pc(CPU * cpu, uint16_t val);
 byte cpu_read_sp(CPU * cpu);
 void cpu_write_sp(CPU * cpu, byte val);
 byte cpu_read_a(CPU * cpu);

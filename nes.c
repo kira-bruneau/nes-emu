@@ -13,7 +13,7 @@ NES * nes_new(GFile * rom_file) {
 
   char buffer[256];
   while(fgets(buffer, ARRAY_LENGTH(buffer), stdin) != NULL) {
-    cpu_eval_next(nes->cpu);
+    cpu_next_instr(nes->cpu);
   }
   return nes;
 }

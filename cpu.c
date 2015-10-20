@@ -1,3 +1,6 @@
+// References:
+//   http://users.telenet.be/kim1-6502/6502/proman.html
+
 #include <glib.h>
 #include <stdio.h>
 
@@ -8,7 +11,7 @@ struct CPU {
   byte sp;
   byte a, x, y;
 
-  // CCR
+  // Flags
   byte n : 1;
   byte v : 1;
   byte b : 1;
@@ -28,16 +31,22 @@ CPU * cpu_new(Memory * mem) {
 }
 
 void cpu_reset(CPU * cpu) {
-  cpu_write_pc16(cpu, 0xC000);
+  cpu_write_pc(cpu, 0xC000);
+  cpu_write_sp(cpu, 0xFD);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// TODO:
+void cpu_eval_clc(CPU * cpu) {
+  printf("CLC\n");
+  cpu_write_c(cpu, 0);
+}
+
+// TODO: Unfinished
 void cpu_eval_jsr(CPU * cpu) {
-  uint16_t addr = cpu_read_pc16(cpu);
-  printf("JMP %04X\n", addr);
-  cpu_write_pc16(cpu, addr);
+  uint16_t addr = cpu_next_16(cpu);
+  printf("JSR $%04X\n", addr);
+  cpu_write_pc(cpu, addr);
 }
 
 void cpu_eval_sec(CPU * cpu) {
@@ -46,33 +55,58 @@ void cpu_eval_sec(CPU * cpu) {
 }
 
 void cpu_eval_jmp(CPU * cpu) {
-  uint16_t addr = cpu_read_pc16(cpu);
-  printf("JMP %04X\n", addr);
-  cpu_write_pc16(cpu, addr);
+  uint16_t addr = cpu_next_16(cpu);
+  printf("JMP $%04X\n", addr);
+  cpu_write_pc(cpu, addr);
 }
 
 void cpu_eval_stx(CPU * cpu) {
-  byte addr = cpu_read_pc(cpu);
+  byte addr = cpu_next_8(cpu);
   byte val = cpu_read_x(cpu);
   printf("STX $%02X = %02X\n", addr, val);
   memory_write(cpu->mem, addr, val);
 }
 
+void cpu_eval_bcc(CPU * cpu) {
+  byte offset = cpu_next_8(cpu);
+  uint16_t addr = cpu_read_pc(cpu) + offset;
+  printf("BCC $%04X\n", addr);
+  if (!cpu_read_c(cpu)) {
+    cpu_write_pc(cpu, addr);
+  }
+}
+
 void cpu_eval_ldx(CPU * cpu) {
-  byte val = cpu_read_pc(cpu);
+  byte val = cpu_next_8(cpu);
   printf("LDX #$%02X\n", val);
   cpu_write_x(cpu, val);
+}
+
+void cpu_eval_lda(CPU * cpu) {
+  byte val = cpu_next_8(cpu);
+  printf("LDA #$%02X\n", val);
+  cpu_write_a(cpu, val);
+}
+
+void cpu_eval_bcs(CPU * cpu) {
+  byte offset = cpu_next_8(cpu);
+  uint16_t addr = cpu_read_pc(cpu) + offset;
+  printf("BCS $%04X\n", addr);
+  if (cpu_read_c(cpu)) {
+    cpu_write_pc(cpu, addr);
+  }
 }
 
 void cpu_eval_nop(CPU * cpu) {
   printf("NOP\n");
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void cpu_eval_next(CPU * cpu) {
-  byte opcode = cpu_read_pc(cpu);
+void cpu_next_instr(CPU * cpu) {
+  byte opcode = cpu_next_8(cpu);
   switch (opcode) {
+  case 0x18:
+    cpu_eval_clc(cpu);
+    break;
   case 0x20:
     cpu_eval_jsr(cpu);
     break;
@@ -85,8 +119,17 @@ void cpu_eval_next(CPU * cpu) {
   case 0x86:
     cpu_eval_stx(cpu);
     break;
+  case 0x90:
+    cpu_eval_bcc(cpu);
+    break;
   case 0xA2:
     cpu_eval_ldx(cpu);
+    break;
+  case 0xA9:
+    cpu_eval_lda(cpu);
+    break;
+  case 0xB0:
+    cpu_eval_bcs(cpu);
     break;
   case 0xEA:
     cpu_eval_nop(cpu);
@@ -99,24 +142,32 @@ void cpu_eval_next(CPU * cpu) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Program counter write and read functions
-byte cpu_read_pc(CPU * cpu) {
+// Obtain and increment the next 8 bits in PC
+byte cpu_next_8(CPU * cpu) {
   byte addr = memory_read(cpu->mem, cpu->pc);
   cpu->pc += 1;
   return addr;
 }
 
-uint16_t cpu_read_pc16(CPU * cpu) {
+// Obtain and increment the next 16 bits in PC
+uint16_t cpu_next_16(CPU * cpu) {
   uint16_t addr = memory_read16(cpu->mem, cpu->pc);
   cpu->pc += 2;
   return addr;
 }
 
-void cpu_write_pc16(CPU * cpu, uint16_t val) {
+////////////////////////////////////////////////////////////////////////////////
+
+// Program counter register read & write
+uint16_t cpu_read_pc(CPU * cpu) {
+  return cpu->pc;
+}
+
+void cpu_write_pc(CPU * cpu, uint16_t val) {
   cpu->pc = val;
 }
 
-// SP register write and read functions
+// SP register read & write
 byte cpu_read_sp(CPU * cpu) {
   return cpu->sp;
 }
@@ -125,7 +176,7 @@ void cpu_write_sp(CPU * cpu, byte val) {
   cpu->sp = val;
 }
 
-// A register write and read functions
+// A register read & write
 byte cpu_read_a(CPU * cpu) {
   return cpu->a;
 }
@@ -134,7 +185,7 @@ void cpu_write_a(CPU * cpu, byte val) {
   cpu->a = val;
 }
 
-// X register write and read functions
+// X register read & write
 byte cpu_read_x(CPU * cpu) {
   return cpu->x;
 }
@@ -143,7 +194,7 @@ void cpu_write_x(CPU * cpu, byte val) {
   cpu->x = val;
 }
 
-// Y register write and read functions
+// Y register read & write
 byte cpu_read_y(CPU * cpu) {
   return cpu->y;
 }
@@ -152,7 +203,7 @@ void cpu_write_y(CPU * cpu, byte val) {
   cpu->y = val;
 }
 
-// CCR register write and read functions
+// Flag register read & write
 byte cpu_read_n(CPU * cpu) {
   return cpu->n;
 }
