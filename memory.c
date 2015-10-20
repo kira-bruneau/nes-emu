@@ -10,9 +10,9 @@ Memory * memory_new(Cartridge * cartridge, size_t size) {
 }
 
 byte memory_read(Memory * mem, uint16_t addr) {
-  if (addr < 0x2000) {
+  if (addr < 0x2000) { // I don't know if this is right, but it's working so far
     return mem->raw[addr % 0x0800];
-  } else if (addr > 0x8000) {
+  } else if (addr > 0x8000) { // I don't know if this is right, but it's working so far
     return cartridge_read(mem->cartridge, addr - 0x8000);
   }
 
@@ -26,5 +26,7 @@ uint16_t memory_read16(Memory * mem, uint16_t addr) {
 }
 
 void memory_write(Memory * mem, uint16_t addr, byte val) {
-  mem->raw[addr] = val;
+  if (addr < 0x2000) { // I don't know if this is right, but it's working so far
+    mem->raw[addr % 0x0800] = val;
+  }
 }
