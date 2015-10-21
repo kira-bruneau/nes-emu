@@ -284,7 +284,6 @@ void cpu_tya(CPU * cpu) {
 /*
  * Unoffical instructions
  */
-
 void cpu_ahx(CPU * cpu) {
   printf("stub\n");
 }
