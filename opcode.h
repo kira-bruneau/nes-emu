@@ -4,7 +4,7 @@
 #include "instruction.h"
 #include "addressing-mode.h"
 
-byte opcode_instruction[] = {
+const byte opcode_instruction[] = {
   INSTR_BRK, INSTR_ORA, INSTR_STP, INSTR_SLO,
   INSTR_NOP, INSTR_ORA, INSTR_ASL, INSTR_SLO,
   INSTR_PHP, INSTR_ORA, INSTR_ASL, INSTR_ANC,
@@ -71,7 +71,7 @@ byte opcode_instruction[] = {
   INSTR_NOP, INSTR_SBC, INSTR_INC, INSTR_ISC
 };
 
-byte opcode_addressing_mode[] = {
+const byte opcode_addressing_mode[] = {
   ADDRMODE_0, ADDRMODE_6, ADDRMODE_0, ADDRMODE_6,
   ADDRMODE_2, ADDRMODE_2, ADDRMODE_2, ADDRMODE_2,
   ADDRMODE_0, ADDRMODE_1, ADDRMODE_0, ADDRMODE_1,

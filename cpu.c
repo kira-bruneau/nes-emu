@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "cpu.h"
+#include "opcode.h"
 
 CPU * cpu_new(Memory * mem) {
   CPU * cpu = g_malloc(sizeof(CPU));
@@ -29,108 +30,55 @@ void cpu_reset(CPU * cpu) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void cpu_eval_clc(CPU * cpu) {
-  printf("CLC\n");
-  cpu_write_c(cpu, 0);
-}
-
-// TODO: Unfinished
-void cpu_eval_jsr(CPU * cpu) {
-  uint16_t addr = cpu_next_16(cpu);
-  printf("JSR $%04X\n", addr);
-  cpu_write_pc(cpu, addr);
-}
-
-void cpu_eval_sec(CPU * cpu) {
-  printf("SEC\n");
-  cpu_write_c(cpu, 1);
-}
-
-void cpu_eval_jmp(CPU * cpu) {
-  uint16_t addr = cpu_next_16(cpu);
-  printf("JMP $%04X\n", addr);
-  cpu_write_pc(cpu, addr);
-}
-
-void cpu_eval_stx(CPU * cpu) {
-  byte addr = cpu_next_8(cpu);
-  byte val = cpu_read_x(cpu);
-  printf("STX $%02X = %02X\n", addr, val);
-  memory_write(cpu->mem, addr, val);
-}
-
-void cpu_eval_bcc(CPU * cpu) {
-  byte offset = cpu_next_8(cpu);
-  uint16_t addr = cpu_read_pc(cpu) + offset;
-  printf("BCC $%04X\n", addr);
-  if (!cpu_read_c(cpu)) {
-    cpu_write_pc(cpu, addr);
-  }
-}
-
-void cpu_eval_ldx(CPU * cpu) {
-  byte val = cpu_next_8(cpu);
-  printf("LDX #$%02X\n", val);
-  cpu_write_x(cpu, val);
-  cpu_write_z(cpu, val == 0);
-}
-
-void cpu_eval_lda(CPU * cpu) {
-  byte val = cpu_next_8(cpu);
-  printf("LDA #$%02X\n", val);
-  cpu_write_a(cpu, val);
-  cpu_write_z(cpu, val == 0);
-}
-
-void cpu_eval_bcs(CPU * cpu) {
-  byte offset = cpu_next_8(cpu);
-  uint16_t addr = cpu_read_pc(cpu) + offset;
-  printf("BCS $%04X\n", addr);
-  if (cpu_read_c(cpu)) {
-    cpu_write_pc(cpu, addr);
-  }
-}
-
-void cpu_eval_nop(CPU * cpu) {
-  printf("NOP\n");
-}
-
 void cpu_next_instr(CPU * cpu) {
-  printf("%04X  ", cpu_read_pc(cpu));
+  printf("%04X  ", cpu->pc);
   byte opcode = cpu_next_8(cpu);
-  switch (opcode) {
-  case 0x18:
-    cpu_eval_clc(cpu);
+
+  Instruction instruction = opcode_instruction[opcode];
+  AdressingMode addressing_mode = opcode_addressing_mode[opcode];
+
+  printf("%s\n", instruction_string[instruction]);
+
+  Action action = instruction_action[instruction];
+  switch (addressing_mode) {
+  case ADDRMODE_0:
+    action(cpu, 0);
     break;
-  case 0x20:
-    cpu_eval_jsr(cpu);
+  case ADDRMODE_1:
+    action(cpu, cpu->pc++);
     break;
-  case 0x38:
-    cpu_eval_sec(cpu);
+  case ADDRMODE_2:
+    action(cpu, cpu_next_8(cpu));
     break;
-  case 0x4C:
-    cpu_eval_jmp(cpu);
+  case ADDRMODE_3:
+    action(cpu, cpu_next_16(cpu));
     break;
-  case 0x86:
-    cpu_eval_stx(cpu);
+  case ADDRMODE_8:
+    action(cpu, cpu->sp + cpu_next_8(cpu));
     break;
-  case 0x90:
-    cpu_eval_bcc(cpu);
+  case ADDRMODE_B:
+    action(cpu, cpu->x + cpu_next_8(cpu));
     break;
-  case 0xA2:
-    cpu_eval_ldx(cpu);
+  case ADDRMODE_C:
+    action(cpu, cpu->y + cpu_next_8(cpu));
     break;
-  case 0xA9:
-    cpu_eval_lda(cpu);
+  case ADDRMODE_9:
+    action(cpu, cpu->x + cpu_next_16(cpu));
     break;
-  case 0xB0:
-    cpu_eval_bcs(cpu);
+  case ADDRMODE_A:
+    action(cpu, cpu->y + cpu_next_16(cpu));
     break;
-  case 0xEA:
-    cpu_eval_nop(cpu);
+  case ADDRMODE_4:
+    action(cpu, memory_read16(cpu->mem, cpu_next_16(cpu)));
     break;
-  default:
-    fprintf(stderr, "Unknown opcode %X\n", opcode);
+  case ADDRMODE_5:
+    action(cpu, cpu->y + memory_read(cpu->mem, cpu_next_8(cpu)));
+    break;
+  case ADDRMODE_6:
+    action(cpu, memory_read(cpu->mem, cpu->x + cpu_next_8(cpu)));
+    break;
+  case ADDRMODE_7:
+    action(cpu, memory_read(cpu->mem, cpu->y + cpu_next_8(cpu)));
     break;
   }
 }
