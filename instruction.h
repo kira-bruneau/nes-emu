@@ -25,7 +25,7 @@ typedef enum Instruction {
   INSTR_TXS, INSTR_TYA, INSTR_XAA
 } Instruction;
 
-const char * instruction_string[] = {
+const char * instruction_name[] = {
   "ADC", "AHX", "ALR", "ANC",
   "AND", "ARR", "ASL", "AXS",
   "BCC", "BCS", "BEQ", "BIT",

@@ -31,54 +31,66 @@ void cpu_reset(CPU * cpu) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void cpu_next_instr(CPU * cpu) {
-  printf("%04X  ", cpu->pc);
+  printf("%04X  %02X ", cpu->pc, memory_read(cpu->mem, cpu->pc));
   byte opcode = cpu_next_8(cpu);
 
   Instruction instruction = opcode_instruction[opcode];
-  AdressingMode addressing_mode = opcode_addressing_mode[opcode];
-
-  printf("%s\n", instruction_string[instruction]);
-
+  const char * name = instruction_name[instruction];
   Action action = instruction_action[instruction];
-  switch (addressing_mode) {
+
+  AdressingMode mode = opcode_addressing_mode[opcode];
+  switch (mode) {
   case ADDRMODE_0:
+    printf("       %s", name);
     action(cpu, 0);
     break;
   case ADDRMODE_1:
+    printf("%02X     %s #$%02X", memory_read(cpu->mem, cpu->pc), name, memory_read(cpu->mem, cpu->pc));
     action(cpu, cpu->pc++);
     break;
   case ADDRMODE_2:
+    printf("%02X     %s $%02X", memory_read(cpu->mem, cpu->pc), name, memory_read(cpu->mem, cpu->pc));
     action(cpu, cpu_next_8(cpu));
     break;
   case ADDRMODE_3:
+    printf("%02X %02X  %s $%04X", memory_read(cpu->mem, cpu->pc), memory_read(cpu->mem, cpu->pc + 1), name, memory_read16(cpu->mem, cpu->pc));
     action(cpu, cpu_next_16(cpu));
     break;
   case ADDRMODE_8:
-    action(cpu, cpu->sp + cpu_next_8(cpu));
+    printf("%02X     %s $%02X", memory_read(cpu->mem, cpu->pc), name, memory_read(cpu->mem, cpu->pc) + cpu->pc + 1);
+    action(cpu, cpu_next_8(cpu) + cpu->pc);
     break;
   case ADDRMODE_B:
-    action(cpu, cpu->x + cpu_next_8(cpu));
+    printf("%s", name);
+    action(cpu, cpu_next_8(cpu) + cpu->x);
     break;
   case ADDRMODE_C:
-    action(cpu, cpu->y + cpu_next_8(cpu));
+    printf("%s", name);
+    action(cpu, cpu_next_8(cpu) + cpu->y);
     break;
   case ADDRMODE_9:
-    action(cpu, cpu->x + cpu_next_16(cpu));
+    printf("%s", name);
+    action(cpu, cpu_next_16(cpu) + cpu->x);
     break;
   case ADDRMODE_A:
-    action(cpu, cpu->y + cpu_next_16(cpu));
+    printf("%s", name);
+    action(cpu, cpu_next_16(cpu) + cpu->y);
     break;
   case ADDRMODE_4:
+    printf("%s", name);
     action(cpu, memory_read16(cpu->mem, cpu_next_16(cpu)));
     break;
   case ADDRMODE_5:
-    action(cpu, cpu->y + memory_read(cpu->mem, cpu_next_8(cpu)));
+    printf("%s", name);
+    action(cpu, memory_read(cpu->mem, cpu_next_8(cpu)) + cpu->y);
     break;
   case ADDRMODE_6:
-    action(cpu, memory_read(cpu->mem, cpu->x + cpu_next_8(cpu)));
+    printf("%s", name);
+    action(cpu, memory_read(cpu->mem, cpu_next_8(cpu) + cpu->x));
     break;
   case ADDRMODE_7:
-    action(cpu, memory_read(cpu->mem, cpu->y + cpu_next_8(cpu)));
+    printf("%s", name);
+    action(cpu, memory_read(cpu->mem, cpu_next_8(cpu) + cpu->y));
     break;
   }
 }
