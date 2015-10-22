@@ -4,6 +4,16 @@
 #include "cpu.h"
 #include "opcode.h"
 
+void cpu_reset(CPU * cpu) {
+  cpu->pc = 0xC000;
+  cpu->sp = 0xFD;
+  cpu->a = 0;
+  cpu->x = 0;
+  cpu->y = 0;
+  cpu->status = 0;
+  cpu->e = 1;
+}
+
 CPU * cpu_new(Memory * mem) {
   CPU * cpu = g_malloc(sizeof(CPU));
   cpu->mem = mem;
@@ -11,21 +21,26 @@ CPU * cpu_new(Memory * mem) {
   return cpu;
 }
 
-void cpu_reset(CPU * cpu) {
-  cpu_write_pc(cpu, 0xC000);
-  cpu_write_sp(cpu, 0xFD);
-  cpu->a = 0;
-  cpu->x = 0;
-  cpu->y = 0;
-  cpu->status = 0;
-  cpu->e = 1; // This needs to be 1 to pass the tests, I will figure out why later
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
+// Obtain the next byte in memory and increment PC
+byte cpu_next_memory(CPU * cpu) {
+  byte addr = memory_read(cpu->mem, cpu->pc);
+  cpu->pc += 1;
+  return addr;
+}
+
+// Obtain the next two bytes in memory and increment PC
+uint16_t cpu_next_memory16(CPU * cpu) {
+  uint16_t addr = memory_read16(cpu->mem, cpu->pc);
+  cpu->pc += 2;
+  return addr;
+}
+
+// Evaluate the next instruction in the program
 void cpu_next_instr(CPU * cpu) {
   printf("%04X  %02X ", cpu->pc, memory_read(cpu->mem, cpu->pc));
-  byte opcode = cpu_next_8(cpu);
+  byte opcode = cpu_next_memory(cpu);
 
   Instruction instruction = opcode_instruction[opcode];
   const char * name = instruction_name[instruction];
@@ -43,167 +58,47 @@ void cpu_next_instr(CPU * cpu) {
     break;
   case ADDRMODE_2:
     printf("%02X     %s $%02X", memory_read(cpu->mem, cpu->pc), name, memory_read(cpu->mem, cpu->pc));
-    action(cpu, cpu_next_8(cpu));
+    action(cpu, cpu_next_memory(cpu));
     break;
   case ADDRMODE_3:
     printf("%02X %02X  %s $%04X", memory_read(cpu->mem, cpu->pc), memory_read(cpu->mem, cpu->pc + 1), name, memory_read16(cpu->mem, cpu->pc));
-    action(cpu, cpu_next_16(cpu));
+    action(cpu, cpu_next_memory16(cpu));
     break;
   case ADDRMODE_8:
     printf("%02X     %s $%02X", memory_read(cpu->mem, cpu->pc), name, memory_read(cpu->mem, cpu->pc) + cpu->pc + 1);
-    action(cpu, cpu_next_8(cpu) + cpu->pc);
+    action(cpu, cpu_next_memory(cpu) + cpu->pc);
     break;
   case ADDRMODE_B:
     printf("%s", name);
-    action(cpu, cpu_next_8(cpu) + cpu->x);
+    action(cpu, cpu_next_memory(cpu) + cpu->x);
     break;
   case ADDRMODE_C:
     printf("%s", name);
-    action(cpu, cpu_next_8(cpu) + cpu->y);
+    action(cpu, cpu_next_memory(cpu) + cpu->y);
     break;
   case ADDRMODE_9:
     printf("%s", name);
-    action(cpu, cpu_next_16(cpu) + cpu->x);
+    action(cpu, cpu_next_memory16(cpu) + cpu->x);
     break;
   case ADDRMODE_A:
     printf("%s", name);
-    action(cpu, cpu_next_16(cpu) + cpu->y);
+    action(cpu, cpu_next_memory16(cpu) + cpu->y);
     break;
   case ADDRMODE_4:
     printf("%s", name);
-    action(cpu, memory_read16(cpu->mem, cpu_next_16(cpu)));
+    action(cpu, memory_read16(cpu->mem, cpu_next_memory16(cpu)));
     break;
   case ADDRMODE_5:
     printf("%s", name);
-    action(cpu, memory_read(cpu->mem, cpu_next_8(cpu)) + cpu->y);
+    action(cpu, memory_read(cpu->mem, cpu_next_memory(cpu)) + cpu->y);
     break;
   case ADDRMODE_6:
     printf("%s", name);
-    action(cpu, memory_read(cpu->mem, cpu_next_8(cpu) + cpu->x));
+    action(cpu, memory_read(cpu->mem, cpu_next_memory(cpu) + cpu->x));
     break;
   case ADDRMODE_7:
     printf("%s", name);
-    action(cpu, memory_read(cpu->mem, cpu_next_8(cpu) + cpu->y));
+    action(cpu, memory_read(cpu->mem, cpu_next_memory(cpu) + cpu->y));
     break;
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Obtain and increment the next 8 bits in PC
-byte cpu_next_8(CPU * cpu) {
-  byte addr = memory_read(cpu->mem, cpu->pc);
-  cpu->pc += 1;
-  return addr;
-}
-
-// Obtain and increment the next 16 bits in PC
-uint16_t cpu_next_16(CPU * cpu) {
-  uint16_t addr = memory_read16(cpu->mem, cpu->pc);
-  cpu->pc += 2;
-  return addr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Program counter register read & write
-uint16_t cpu_read_pc(CPU * cpu) {
-  return cpu->pc;
-}
-
-void cpu_write_pc(CPU * cpu, uint16_t val) {
-  cpu->pc = val;
-}
-
-// SP register read & write
-byte cpu_read_sp(CPU * cpu) {
-  return cpu->sp;
-}
-
-void cpu_write_sp(CPU * cpu, byte val) {
-  cpu->sp = val;
-}
-
-// A register read & write
-byte cpu_read_a(CPU * cpu) {
-  return cpu->a;
-}
-
-void cpu_write_a(CPU * cpu, byte val) {
-  cpu->a = val;
-}
-
-// X register read & write
-byte cpu_read_x(CPU * cpu) {
-  return cpu->x;
-}
-
-void cpu_write_x(CPU * cpu, byte val) {
-  cpu->x = val;
-}
-
-// Y register read & write
-byte cpu_read_y(CPU * cpu) {
-  return cpu->y;
-}
-
-void cpu_write_y(CPU * cpu, byte val) {
-  cpu->y = val;
-}
-
-// Flag register read & write
-byte cpu_read_n(CPU * cpu) {
-  return cpu->n;
-}
-
-void cpu_write_n(CPU * cpu, byte val) {
-  cpu->n = val;
-}
-
-byte cpu_read_v(CPU * cpu) {
-  return cpu->v;
-}
-
-void cpu_write_v(CPU * cpu, byte val) {
-  cpu->v = val;
-}
-
-byte cpu_read_b(CPU * cpu) {
-  return cpu->b;
-}
-
-void cpu_write_b(CPU * cpu, byte val) {
-  cpu->b = val;
-}
-
-byte cpu_read_d(CPU * cpu) {
-  return cpu->d;
-}
-
-void cpu_write_d(CPU * cpu, byte val) {
-  cpu->d = val;
-}
-
-byte cpu_read_i(CPU * cpu) {
-  return cpu->i;
-}
-
-void cpu_write_i(CPU * cpu, byte val) {
-  cpu->i = val;
-}
-
-byte cpu_read_z(CPU * cpu) {
-  return cpu->z;
-}
-
-void cpu_write_z(CPU * cpu, byte val) {
-  cpu->z = val;
-}
-
-byte cpu_read_c(CPU * cpu) {
-  return cpu->c;
-}
-
-void cpu_write_c(CPU * cpu, byte val) {
-  cpu->c = val;
 }
