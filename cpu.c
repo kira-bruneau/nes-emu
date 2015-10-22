@@ -18,6 +18,7 @@ void cpu_reset(CPU * cpu) {
   cpu->x = 0;
   cpu->y = 0;
   cpu->status = 0;
+  cpu->e = 1; // This needs to be 1 to pass the tests, I will figure out why later
 }
 
 ////////////////////////////////////////////////////////////////////////////////

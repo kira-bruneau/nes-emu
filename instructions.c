@@ -34,7 +34,10 @@ void cpu_adc(CPU * cpu, uint16_t addr) {
 }
 
 void cpu_and(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  byte result = cpu->a & memory_read(cpu->mem, addr);
+  cpu->z = result == 0;
+  cpu->n = (result >> 7) & 1;
+  cpu->a = result;
 }
 
 void cpu_asl(CPU * cpu, uint16_t addr) {
@@ -61,9 +64,9 @@ void cpu_beq(CPU * cpu, uint16_t addr) {
 
 void cpu_bit(CPU * cpu, uint16_t addr) {
   byte value = memory_read(cpu->mem, addr);
-  cpu->n = (value >> 7) & 1;
-  cpu->v = (value >> 6) & 1;
   cpu->z = value & cpu->a;
+  cpu->v = (value >> 6) & 1;
+  cpu->n = (value >> 7) & 1;
 }
 
 void cpu_bmi(CPU * cpu, uint16_t addr) {
@@ -117,7 +120,12 @@ void cpu_clv(CPU * cpu, uint16_t addr) {
 }
 
 void cpu_cmp(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  byte value = memory_read(cpu->mem, addr);
+  byte result = cpu->a - value;
+  cpu->c = value <= cpu->a;
+  cpu->z = result == 0;
+  cpu->n = (result >> 7) & 1;
+  cpu->a = result;
 }
 
 void cpu_cpx(CPU * cpu, uint16_t addr) {
@@ -168,23 +176,23 @@ void cpu_jsr(CPU * cpu, uint16_t addr) {
 
 void cpu_lda(CPU * cpu, uint16_t addr) {
   byte value = memory_read(cpu->mem, addr);
-  cpu->a = value;
   cpu->z = value == 0;
   cpu->n = (value >> 7) & 1;
+  cpu->a = value;
 }
 
 void cpu_ldx(CPU * cpu, uint16_t addr) {
   byte value = memory_read(cpu->mem, addr);
-  cpu->x = value;
   cpu->z = value == 0;
   cpu->n = (value >> 7) & 1;
+  cpu->x = value;
 }
 
 void cpu_ldy(CPU * cpu, uint16_t addr) {
   byte value = memory_read(cpu->mem, addr);
-  cpu->y = value;
   cpu->z = value == 0;
   cpu->n = (value >> 7) & 1;
+  cpu->y = value;
 }
 
 void cpu_lsr(CPU * cpu, uint16_t addr) {
@@ -212,9 +220,9 @@ void cpu_pla(CPU * cpu, uint16_t addr) {
   cpu->sp -= 1;
 
   byte value = memory_read(cpu->mem, cpu->sp);
-  cpu->a = value;
-  cpu->n = (value >> 7) & 1;
   cpu->z = value == 0;
+  cpu->n = (value >> 7) & 1;
+  cpu->a = value;
 }
 
 void cpu_plp(CPU * cpu, uint16_t addr) {
