@@ -29,4 +29,7 @@ typedef struct CPU {
 CPU * cpu_new();
 void cpu_next_instr(CPU * cpu);
 
+void cpu_test_interactive(CPU * cpu);
+void cpu_test_automated(CPU * cpu);
+
 #endif

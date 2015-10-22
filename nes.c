@@ -11,18 +11,6 @@ NES * nes_new(GFile * rom_file) {
   Memory * memory = memory_new(cartridge);
   nes->cpu = cpu_new(memory);
 
-  // Number of instructions to perform automatically
-  int i;
-  for (i = 0; i < 154; ++i) {
-    cpu_next_instr(nes->cpu);
-    printf("\n");
-  }
-
-  printf("\n");
-
-  char buffer[256];
-  while(fgets(buffer, ARRAY_LENGTH(buffer), stdin) != NULL) {
-    cpu_next_instr(nes->cpu);
-  }
+  cpu_test_interactive(nes->cpu);
   return nes;
 }
