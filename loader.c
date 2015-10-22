@@ -2,7 +2,9 @@
 #include <gio/gio.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
+#include "util.h"
 #include "nes.h"
 
 /**
@@ -55,10 +57,16 @@ static GFile * select_rom(GList * rom_list) {
     g_list_foreach(rom_list, list_rom, &index);
     printf("Select action: ");
 
-    int input;
-    if (scanf("%d", &input) != 1) {
-      // This just does an infinite loop for some reason
-      continue;
+    char buffer[16];
+    if (fgets(buffer, ARRAY_LENGTH(buffer), stdin) == NULL) {
+      return NULL;
+    }
+
+    char * ptr;
+    int input = strtoul(buffer, &ptr, 10);
+    if (ptr == buffer) {
+      printf("Error: %s\n", "Invalid");
+      return NULL;
     }
 
     if (input == 0) {
@@ -67,8 +75,8 @@ static GFile * select_rom(GList * rom_list) {
 
     file_name = g_list_nth_data(rom_list, input - 1);
     if (!file_name) {
-      printf("%s\n", "Invalid!");
-      continue;
+      printf("Error: %s\n", "Out of range");
+      return NULL;
     }
 
     break;
