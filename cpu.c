@@ -14,18 +14,10 @@ CPU * cpu_new(Memory * mem) {
 void cpu_reset(CPU * cpu) {
   cpu_write_pc(cpu, 0xC000);
   cpu_write_sp(cpu, 0xFD);
-
   cpu->a = 0;
   cpu->x = 0;
   cpu->y = 0;
-
-  cpu->c = 0;
-  cpu->z = 0;
-  cpu->i = 0;
-  cpu->d = 0;
-  cpu->b = 0;
-  cpu->v = 0;
-  cpu->n = 0;
+  cpu->status = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -13,7 +13,7 @@ NES * nes_new(GFile * rom_file) {
 
   // Number of instructions to perform automatically
   int i;
-  for (i = 0; i < 60; ++i) {
+  for (i = 0; i < 68; ++i) {
     cpu_next_instr(nes->cpu);
     printf("\n");
   }

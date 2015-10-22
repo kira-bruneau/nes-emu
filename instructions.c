@@ -22,7 +22,7 @@
 // i: BRK, CLI, PLP, RTI, SEI
 // d: CLD, PLP, RTI, SED
 // b: NONE
-
+// e: NOT USED
 // v: ADC, BIT, CLV, PLP, RTI, SBC
 // n: ADC, AND, ASL, BIT, CMP, CPY, CPX, DEC, DEX, DEY, EOR, INC, INX, INY, LDA, LDX, LDY, LSR, ORA, PLA, PLP, ROL, BIT, SBC, TAX, TAY, TSX, TXA, TYA
 
@@ -199,19 +199,27 @@ void cpu_ora(CPU * cpu, uint16_t addr) {
 }
 
 void cpu_pha(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  memory_write(cpu->mem, cpu->sp, cpu->a);
+  cpu->sp += 1;
 }
 
 void cpu_php(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  memory_write(cpu->mem, cpu->sp, cpu->status);
+  cpu->sp += 1;
 }
 
 void cpu_pla(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  cpu->sp -= 1;
+
+  byte value = memory_read(cpu->mem, cpu->sp);
+  cpu->a = value;
+  cpu->n = (value >> 7) & 1;
+  cpu->z = value == 0;
 }
 
 void cpu_plp(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  cpu->sp -= 1;
+  cpu->status = memory_read(cpu->mem, cpu->sp);
 }
 
 void cpu_rol(CPU * cpu, uint16_t addr) {
