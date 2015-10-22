@@ -42,3 +42,10 @@ void memory_write(Memory * mem, uint16_t addr, byte val) {
     mem->ram[addr % MIRROR_SIZE] = val;
   }
 }
+
+void memory_write16(Memory * mem, uint16_t addr, uint16_t val) {
+  byte low = val;
+  byte high = val >> 8;
+  memory_write(mem, addr, low);
+  memory_write(mem, addr + 1, high);
+}
