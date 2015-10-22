@@ -105,11 +105,11 @@ void cpu_clc(CPU * cpu, uint16_t addr) {
 }
 
 void cpu_cld(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  cpu->d = 0;
 }
 
 void cpu_cli(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  cpu->i = 0;
 }
 
 void cpu_clv(CPU * cpu, uint16_t addr) {
@@ -240,11 +240,11 @@ void cpu_sec(CPU * cpu, uint16_t addr) {
 }
 
 void cpu_sed(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  cpu->d = 1;
 }
 
 void cpu_sei(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  cpu->i = 1;
 }
 
 void cpu_shx(CPU * cpu, uint16_t addr) {
