@@ -220,6 +220,13 @@ void cpu_bpl(CPU * cpu, Address addr) {
   }
 }
 
+void cpu_brk(CPU * cpu, Address addr) {
+  cpu_push16(cpu, cpu->pc);
+  cpu_php(cpu, addr);
+  cpu_sei(cpu, addr);
+  cpu->pc = memory_read(cpu->mem, 0xFFFE);
+}
+
 void cpu_bvc(CPU * cpu, Address addr) {
   if (!cpu->v) {
     cpu->pc = addr.val;
@@ -450,13 +457,6 @@ void cpu_tya(CPU * cpu, Address addr) {
   cpu->a = val;
 }
 
-void cpu_brk(CPU * cpu, Address addr) {
-  cpu_push16(cpu, cpu->pc);
-  cpu_php(cpu, addr);
-  cpu_sei(cpu, addr);
-  cpu->pc = memory_read(cpu->mem, 0xFFFE);
-}
-
 /*
  * Unoffical instructions
  */
@@ -547,6 +547,7 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
   byte a = cpu->a;
   byte x = cpu->x;
   byte y = cpu->y;
+  byte status = cpu->status;
 
   i += sprintf(buffer + i, "%04X  %02X ", pc, memory_read(cpu->mem, pc));
 
@@ -596,7 +597,7 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
     break;
   }
 
-  i += sprintf(buffer + i, "A:%02X X:%02X Y:%02X SP:%02X\n", a, x, y, sp);
+  i += sprintf(buffer + i, "A:%02X X:%02X Y:%02X P:%02X SP:%02X\n", a, x, y, status, sp);
 }
 
 void cpu_test(CPU * cpu) {
