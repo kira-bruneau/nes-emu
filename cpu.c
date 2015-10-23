@@ -8,6 +8,12 @@
 #include "opcode.h"
 #include "util.h"
 
+/**
+ * References:
+ * Manual: http://users.telenet.be/kim1-6502/6502/proman.html
+ * NesDev: http://wiki.nesdev.com/w/index.php/CPU
+ */
+
 struct CPU {
   uint16_t pc;
   byte sp;

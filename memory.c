@@ -4,6 +4,11 @@
 
 #include "memory.h"
 
+/**
+ * References:
+ * NesDev: http://wiki.nesdev.com/w/index.php/CPU_memory_map
+ */
+
 #define RAM_MIN 0x0000
 #define RAM_MAX 0x2000
 #define RAM_SIZE 0x0800
