@@ -13,7 +13,7 @@
 Memory * memory_new(Cartridge * cartridge) {
   Memory * mem = g_malloc(sizeof(Memory));
   mem->cartridge = cartridge;
-  mem->ram = g_malloc(MIRROR_SIZE);
+  mem->ram = g_malloc0(MIRROR_SIZE);
   return mem;
 }
 

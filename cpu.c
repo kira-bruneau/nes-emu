@@ -43,50 +43,54 @@ uint16_t cpu_next_memory16(CPU * cpu) {
 void cpu_next_instr(CPU * cpu) {
   byte opcode = cpu_next_memory(cpu);
   Instruction instruction = opcode_instruction[opcode];
-  Action action = instruction_action[instruction];
-  AdressingMode mode = opcode_addressing_mode[opcode];
 
-  switch (mode) {
+  Address addr;
+  addr.val = 0;
+  addr.null = false;
+
+  switch (opcode_addressing_mode[opcode]) {
   case ADDRMODE_0:
-    action(cpu, 0);
+    addr.null = true;
     break;
   case ADDRMODE_1:
-    action(cpu, cpu->pc++);
+    addr.val = cpu->pc++;
     break;
   case ADDRMODE_2:
-    action(cpu, cpu_next_memory(cpu));
+    addr.val = cpu_next_memory(cpu);
     break;
   case ADDRMODE_3:
-    action(cpu, cpu_next_memory16(cpu));
+    addr.val = cpu_next_memory16(cpu);
     break;
   case ADDRMODE_8:
-    action(cpu, cpu_next_memory(cpu) + cpu->pc);
+    addr.val = cpu_next_memory(cpu) + cpu->pc;
     break;
   case ADDRMODE_B:
-    action(cpu, cpu_next_memory(cpu) + cpu->x);
+    addr.val = cpu_next_memory(cpu) + cpu->x;
     break;
   case ADDRMODE_C:
-    action(cpu, cpu_next_memory(cpu) + cpu->y);
+    addr.val = cpu_next_memory(cpu) + cpu->y;
     break;
   case ADDRMODE_9:
-    action(cpu, cpu_next_memory16(cpu) + cpu->x);
+    addr.val = cpu_next_memory16(cpu) + cpu->x;
     break;
   case ADDRMODE_A:
-    action(cpu, cpu_next_memory16(cpu) + cpu->y);
+    addr.val = cpu_next_memory16(cpu) + cpu->y;
     break;
   case ADDRMODE_4:
-    action(cpu, memory_read16(cpu->mem, cpu_next_memory16(cpu)));
+    addr.val = memory_read16(cpu->mem, cpu_next_memory16(cpu));
     break;
   case ADDRMODE_5:
-    action(cpu, memory_read(cpu->mem, cpu_next_memory(cpu)) + cpu->y);
+    addr.val = memory_read(cpu->mem, cpu_next_memory(cpu)) + cpu->y;
     break;
   case ADDRMODE_6:
-    action(cpu, memory_read(cpu->mem, cpu_next_memory(cpu) + cpu->x));
+    addr.val = memory_read(cpu->mem, cpu_next_memory(cpu) + cpu->x);
     break;
   case ADDRMODE_7:
-    action(cpu, memory_read(cpu->mem, cpu_next_memory(cpu) + cpu->y));
+    addr.val = memory_read(cpu->mem, cpu_next_memory(cpu) + cpu->y);
     break;
   }
+
+  instruction_action[instruction](cpu, addr);
 }
 
 void cpu_debug_instr(CPU * cpu, char * buffer) {
@@ -100,7 +104,7 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
 
   i += sprintf(buffer + i, "%04X  %02X ", pc, memory_read(cpu->mem, pc));
 
-  byte opcode = cpu_next_memory(cpu);
+  byte opcode = memory_read(cpu->mem, pc);
   Instruction instruction = opcode_instruction[opcode];
   const char * name = instruction_name[instruction];
   AdressingMode mode = opcode_addressing_mode[opcode];
@@ -148,7 +152,6 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
   }
 
   i += sprintf(buffer + i, "A:%02X X:%02X Y:%02X SP:%02X\n", a, x, y, sp);
-  cpu->pc = pc;
 }
 
 void cpu_test_automated(CPU * cpu) {
