@@ -601,6 +601,15 @@ void cpu_test_interactive(CPU * cpu) {
       int addr = strtol(buffer + 1, NULL, 0);
       cpu->pc = addr;
       printf("pc = $%04X\n", addr);
+    } else if (strncmp(buffer, "l", 1) == 0) {
+      int line = strtol(buffer + 1, NULL, 0);
+      while (line > 0) {
+        char debug[128];
+        cpu_debug_instr(cpu, debug);
+        printf("%s", debug);
+        cpu_next_instr(cpu);
+        line -= 1;
+      }
     } else if (strncmp(buffer, "n", 1) == 0 || strlen(buffer) == 1) {
       char debug[128];
       cpu_debug_instr(cpu, debug);
