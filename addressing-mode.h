@@ -18,18 +18,18 @@ typedef enum AdressingMode {
 } AdressingMode;
 
 const char * addressing_mode_string[] = {
-  ""
-  "#i"
-  "d"
-  "a"
-  "(a)"
-  "(d),y"
-  "(d,x)"
-  "(d,y)"
-  "*+d"
-  "a,x"
-  "a,y"
-  "d,x"
+  "",
+  "#i",
+  "d",
+  "a",
+  "(a)",
+  "(d),y",
+  "(d,x)",
+  "(d,y)",
+  "*+d",
+  "a,x",
+  "a,y",
+  "d,x",
   "d,y"
 };
 
