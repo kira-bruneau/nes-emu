@@ -1,5 +1,7 @@
 #include <glib.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "cpu.h"
 #include "opcode.h"
@@ -42,8 +44,8 @@ void cpu_next_instr(CPU * cpu) {
   byte opcode = cpu_next_memory(cpu);
   Instruction instruction = opcode_instruction[opcode];
   Action action = instruction_action[instruction];
-
   AdressingMode mode = opcode_addressing_mode[opcode];
+
   switch (mode) {
   case ADDRMODE_0:
     action(cpu, 0);
@@ -87,84 +89,109 @@ void cpu_next_instr(CPU * cpu) {
   }
 }
 
-/**
- * Testing
- */
+void cpu_debug_instr(CPU * cpu, char * buffer) {
+  int i = 0;
 
-void cpu_debug_instr(CPU * cpu) {
-  // Snapshot registers
   uint16_t pc = cpu->pc;
   byte sp = cpu->sp;
   byte a = cpu->a;
   byte x = cpu->x;
   byte y = cpu->y;
 
-  byte opcode = pc;
-  Instruction instruction = opcode_instruction[opcode];
-  Action action = instruction_action[instruction];
+  i += sprintf(buffer + i, "%04X  %02X ", pc, memory_read(cpu->mem, pc));
 
+  byte opcode = cpu_next_memory(cpu);
+  Instruction instruction = opcode_instruction[opcode];
   const char * name = instruction_name[instruction];
   AdressingMode mode = opcode_addressing_mode[opcode];
+
   switch (mode) {
   case ADDRMODE_0:
-    action(cpu, 0);
+    i += sprintf(buffer + i, "       %s                             ", name);
     break;
   case ADDRMODE_1:
-    printf("%02X     %s #$%02X                        ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1));
+    i += sprintf(buffer + i, "%02X     %s #$%02X                        ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1));
     break;
   case ADDRMODE_2:
-    printf("%02X     %s $%02X = %02X                    ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, memory_read(cpu->mem, pc + 1)));
+    i += sprintf(buffer + i, "%02X     %s $%02X = %02X                    ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, memory_read(cpu->mem, pc + 1)));
     break;
   case ADDRMODE_3:
-    printf("%02X %02X  %s $%04X                       ", memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, pc + 2), name, memory_read16(cpu->mem, pc + 1));
+    i += sprintf(buffer + i, "%02X %02X  %s $%04X                       ", memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, pc + 2), name, memory_read16(cpu->mem, pc + 1));
     break;
   case ADDRMODE_8:
-    printf("%02X     %s $%02X                       ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1) + pc + 2);
+    i += sprintf(buffer + i, "%02X     %s $%02X                       ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1) + pc + 2);
     break;
   case ADDRMODE_B:
-    printf("%s                             ", name);
+    i += sprintf(buffer + i, "       %s                             ", name);
     break;
   case ADDRMODE_C:
-    printf("%s                             ", name);
+    i += sprintf(buffer + i, "       %s                             ", name);
     break;
   case ADDRMODE_9:
-    printf("%s                             ", name);
+    i += sprintf(buffer + i, "       %s                             ", name);
     break;
   case ADDRMODE_A:
-    printf("%s                             ", name);
+    i += sprintf(buffer + i, "       %s                             ", name);
     break;
   case ADDRMODE_4:
-    printf("%s                             ", name);
+    i += sprintf(buffer + i, "       %s                             ", name);
     break;
   case ADDRMODE_5:
-    printf("%s                             ", name);
+    i += sprintf(buffer + i, "       %s                             ", name);
     break;
   case ADDRMODE_6:
-    printf("%s                             ", name);
+    i += sprintf(buffer + i, "       %s                             ", name);
     break;
   case ADDRMODE_7:
-    printf("%s                             ", name);
+    i += sprintf(buffer + i, "       %s                             ", name);
     break;
   }
 
-  printf("A:%02X X:%02X Y:%02X SP:%02X", a, x, y, sp);
-}
-
-void cpu_test_interactive(CPU * cpu) {
-  // Number of instructions to perform automatically
-  int i;
-  for (i = 0; i < 0; ++i) {
-    cpu_next_instr(cpu);
-    printf("\n");
-  }
-
-  char buffer[256];
-  while(fgets(buffer, ARRAY_LENGTH(buffer), stdin) != NULL) {
-    cpu_debug_instr(cpu);
-    cpu_next_instr(cpu);
-  }
+  i += sprintf(buffer + i, "A:%02X X:%02X Y:%02X SP:%02X\n", a, x, y, sp);
+  cpu->pc = pc;
 }
 
 void cpu_test_automated(CPU * cpu) {
-  // Stub
+  FILE * fp = fopen("sub-nestest.log", "r");
+
+  int lineno = 1;
+  char test[128], debug[128];
+  while (fgets(test, ARRAY_LENGTH(test), fp) != NULL) {
+    cpu_debug_instr(cpu, debug);
+
+    if (strcmp(debug, test) != 0) {
+      printf("Test Failed (line %i):\n  Expected: %s  Obtained: %s", lineno, test, debug);
+      break;
+    }
+
+    cpu_next_instr(cpu);
+    lineno += 1;
+  }
+
+  fclose(fp);
+}
+
+void cpu_test_interactive(CPU * cpu) {
+  char buffer[16];
+  printf("> ");
+  while(fgets(buffer, ARRAY_LENGTH(buffer), stdin) != NULL) {
+    if (strncmp(buffer, "g", 1) == 0) {
+      int addr = strtol(buffer + 1, NULL, 0);
+      cpu->pc = addr;
+      printf("pc = $%04X\n", addr);
+    } else if (strncmp(buffer, "n", 1) == 0 || strlen(buffer) == 1) {
+      char debug[128];
+      cpu_debug_instr(cpu, debug);
+      printf("%s", debug);
+      cpu_next_instr(cpu);
+    } else if (strncmp(buffer, "a", 1) == 0) {
+      cpu_test_automated(cpu);
+    } else if (strncmp(buffer, "q", 1) == 0) {
+      break;
+    } else {
+      printf("%s\n", "Invalid command");
+    }
+
+    printf("> ");
+  }
 }

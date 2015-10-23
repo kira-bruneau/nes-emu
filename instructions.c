@@ -82,7 +82,7 @@ void cpu_and(CPU * cpu, uint16_t addr) {
 }
 
 void cpu_asl(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_bcc(CPU * cpu, uint16_t addr) {
@@ -241,7 +241,7 @@ void cpu_ldy(CPU * cpu, uint16_t addr) {
 }
 
 void cpu_lsr(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_nop(CPU * cpu, uint16_t addr) {
@@ -272,11 +272,11 @@ void cpu_plp(CPU * cpu, uint16_t addr) {
 }
 
 void cpu_rol(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_ror(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_rti(CPU * cpu, uint16_t addr) {
@@ -366,77 +366,77 @@ void cpu_brk(CPU * cpu, uint16_t addr) {
  * Unoffical instructions
  */
 void cpu_ahx(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_alr(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_anc(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_arr(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_axs(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_dcp(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_isc(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_las(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_lax(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_rla(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_rra(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_sax(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_shx(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_shy(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_slo(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_sre(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_stp(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_tas(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
 
 void cpu_xaa(CPU * cpu, uint16_t addr) {
-  printf(" - STUB");
+  printf("STUB\n");
 }
