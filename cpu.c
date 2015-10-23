@@ -619,37 +619,98 @@ void cpu_test(CPU * cpu) {
   fclose(fp);
 }
 
+bool cpu_debug_next(CPU * cpu, const char * buffer) {
+  char * ptr;
+  int num = strtol(buffer, &ptr, 0);
+  if (ptr == buffer) {
+    num = 1;
+  }
+
+  while (num > 0) {
+    char debug[128];
+    cpu_debug_instr(cpu, debug);
+    printf("%s", debug);
+    cpu_next_instr(cpu);
+    num -= 1;
+  }
+
+  return true;
+}
+
+bool cpu_debug_goto(CPU * cpu, const char * buffer) {
+  char * ptr;
+  int addr = strtol(buffer, &ptr, 0);
+  if (ptr == buffer) {
+    printf("Expected address\n");
+    return true;
+  }
+
+  cpu->pc = addr;
+  printf("PC = $%04X\n", addr);
+  return true;
+}
+
+bool cpu_debug_reset(CPU * cpu, const char * buffer) {
+  cpu_reset(cpu);
+  memory_reset(cpu->mem);
+  printf("Reset NES\n");
+  return true;
+}
+
+bool cpu_debug_test(CPU * cpu, const char * buffer) {
+  cpu_debug_reset(cpu, buffer);
+  cpu_test(cpu);
+  return true;
+}
+
+bool cpu_debug_quit(CPU * cpu, const char * buffer) {
+  return false;
+}
+
+const struct {
+  const char * name;
+  bool (*action)(CPU * cpu, const char * buffer);
+} cpu_debug_commands[] = {
+  {"next", cpu_debug_next},
+  {"goto", cpu_debug_goto},
+  {"reset", cpu_debug_reset},
+  {"rs", cpu_debug_reset},
+  {"test", cpu_debug_test},
+  {"quit", cpu_debug_quit},
+  {"exit", cpu_debug_quit}
+};
+
 void cpu_debug(CPU * cpu) {
-  char buffer[16];
+  char buffer[256];
+
   printf("> ");
   while(fgets(buffer, ARRAY_LENGTH(buffer), stdin) != NULL) {
-    if (strncmp(buffer, "g", 1) == 0) {
-      int addr = strtol(buffer + 1, NULL, 0);
-      cpu->pc = addr;
-      printf("pc = $%04X\n", addr);
-    } else if (strncmp(buffer, "l", 1) == 0) {
-      int line = strtol(buffer + 1, NULL, 0);
-      while (line > 0) {
-        char debug[128];
-        cpu_debug_instr(cpu, debug);
-        printf("%s", debug);
-        cpu_next_instr(cpu);
-        line -= 1;
-      }
-    } else if (strncmp(buffer, "n", 1) == 0 || strlen(buffer) == 1) {
-      char debug[128];
-      cpu_debug_instr(cpu, debug);
-      printf("%s", debug);
-      cpu_next_instr(cpu);
-    } else if (strncmp(buffer, "r", 1) == 0) {
-      cpu_reset(cpu);
-      memory_reset(cpu->mem);
-    } else if (strncmp(buffer, "a", 1) == 0) {
-      cpu_test(cpu);
-    } else if (strncmp(buffer, "q", 1) == 0) {
-      break;
+    size_t len;
+    char * params = strchr(buffer, ' ');
+    if (!params) {
+      len = strlen(buffer) - 1;
+      params = buffer + len;
     } else {
-      printf("%s\n", "Invalid command");
+      len = params - buffer;
+    }
+
+    size_t i;
+    bool valid = false;
+    bool quit = false;
+    for (i = 0; i < ARRAY_LENGTH(cpu_debug_commands); ++i) {
+      if (strncmp(buffer, cpu_debug_commands[i].name, len) == 0) {
+        quit = !cpu_debug_commands[i].action(cpu, params);
+        valid = true;
+        break;
+      }
+    }
+
+    if (quit) {
+      break;
+    }
+
+    if (!valid) {
+      printf("Invalid command\n");
     }
 
     printf("> ");
