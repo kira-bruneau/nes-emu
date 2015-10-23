@@ -641,6 +641,9 @@ void cpu_debug(CPU * cpu) {
       cpu_debug_instr(cpu, debug);
       printf("%s", debug);
       cpu_next_instr(cpu);
+    } else if (strncmp(buffer, "r", 1) == 0) {
+      cpu_reset(cpu);
+      memory_reset(cpu->mem);
     } else if (strncmp(buffer, "a", 1) == 0) {
       cpu_test(cpu);
     } else if (strncmp(buffer, "q", 1) == 0) {
