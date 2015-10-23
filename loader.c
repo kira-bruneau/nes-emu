@@ -87,8 +87,15 @@ static GFile * select_rom(GList * rom_list) {
 }
 
 int main() {
+  const char * dir = "roms/";
+
   GList * rom_list = NULL;
-  rom_list = find_roms(rom_list, "roms/");
+  rom_list = find_roms(rom_list, dir);
+  if (rom_list == NULL) {
+    fprintf(stderr, "No ROMs found at '%s'\n", dir);
+    return 1;
+  }
+
   rom_list = g_list_sort(rom_list, (GCompareFunc)g_strcmp0);
 
   GFile * rom_file = select_rom(rom_list);
