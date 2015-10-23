@@ -600,26 +600,6 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
   i += sprintf(buffer + i, "A:%02X X:%02X Y:%02X P:%02X SP:%02X\n", a, x, y, status, sp);
 }
 
-void cpu_test(CPU * cpu) {
-  FILE * fp = fopen("sub-nestest.log", "r");
-
-  int lineno = 1;
-  char test[128], debug[128];
-  while (fgets(test, ARRAY_LENGTH(test), fp) != NULL) {
-    cpu_debug_instr(cpu, debug);
-
-    if (strcmp(debug, test) != 0) {
-      printf("Test Failed (line %i):\n  Expected: %s  Obtained: %s", lineno, test, debug);
-      break;
-    }
-
-    cpu_next_instr(cpu);
-    lineno += 1;
-  }
-
-  fclose(fp);
-}
-
 bool cpu_debug_next(CPU * cpu, const char * buffer) {
   char * ptr;
   int num = strtol(buffer, &ptr, 0);
@@ -660,7 +640,32 @@ bool cpu_debug_reset(CPU * cpu, const char * buffer) {
 
 bool cpu_debug_test(CPU * cpu, const char * buffer) {
   cpu_debug_reset(cpu, buffer);
-  cpu_test(cpu);
+
+  char * ptr;
+  int tolerance = strtol(buffer, &ptr, 0);
+  if (ptr == buffer) {
+    tolerance = 1;
+  }
+
+  FILE * fp = fopen("sub-nestest.log", "r");
+
+  int lineno = 1;
+  char test[128], debug[128];
+  while (tolerance != 0 && fgets(test, ARRAY_LENGTH(test), fp) != NULL) {
+    cpu_debug_instr(cpu, debug);
+
+    if (strcmp(debug, test) != 0) {
+      printf("Test Failed (line %i):\n  Expected: %s  Obtained: %s", lineno, test, debug);
+      tolerance--;
+    }
+
+    cpu_next_instr(cpu);
+    lineno += 1;
+  }
+
+  fclose(fp);
+
+  cpu_debug_reset(cpu, buffer);
   return true;
 }
 
