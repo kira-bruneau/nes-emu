@@ -50,7 +50,7 @@ Cartridge * cartridge_new(GFile * rom_file) {
   Cartridge * cartridge = g_malloc(sizeof(Cartridge));
 
   GInputStream * stream = (GInputStream *)g_file_read(rom_file, NULL, NULL);
-  if (!stream) {
+  if (stream == NULL) {
     return NULL;
   }
 
@@ -58,7 +58,7 @@ Cartridge * cartridge_new(GFile * rom_file) {
   NESHeader header;
   g_input_stream_read(stream, &header, sizeof(header), NULL, NULL);
 
-  if (memcmp(&header.magic, nes_magic, 4)) {
+  if (memcmp(&header.magic, nes_magic, 4) != 0) {
     fprintf(stderr, "ERROR: File is not a ROM file!\n");
     return NULL;
   }
@@ -85,6 +85,8 @@ Cartridge * cartridge_new(GFile * rom_file) {
     chr_rom = g_malloc(chr_rom_size);
     g_input_stream_read(stream, chr_rom, chr_rom_size, NULL, NULL);
   }
+
+  g_input_stream_close(stream, NULL, NULL);
 
   // Mapper
   int mapper = header.mapper_high << 4 | header.mapper_low;
