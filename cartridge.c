@@ -69,14 +69,22 @@ Cartridge * cartridge_new(GFile * rom_file) {
   }
 
   // Read PRG ROM data
-  size_t prg_rom_size = 16384 * header.prg_rom_size;
-  byte * prg_rom = g_malloc(prg_rom_size);
-  g_input_stream_read(stream, prg_rom, prg_rom_size, NULL, NULL);
+  size_t prg_rom_size = 0;
+  byte * prg_rom = NULL;
+  if (header.prg_rom_size != 0) {
+    prg_rom_size = 16384 * header.prg_rom_size;
+    prg_rom = g_malloc(prg_rom_size);
+    g_input_stream_read(stream, prg_rom, prg_rom_size, NULL, NULL);
+  }
 
   // Read CHR ROM data
-  size_t chr_rom_size = 8192 * header.chr_rom_size;
-  byte * chr_rom = g_malloc(chr_rom_size);
-  g_input_stream_read(stream, chr_rom, chr_rom_size, NULL, NULL);
+  size_t chr_rom_size = 0;
+  byte * chr_rom = NULL;
+  if (header.chr_rom_size != 0) {
+    chr_rom_size = 8192 * header.chr_rom_size;
+    chr_rom = g_malloc(chr_rom_size);
+    g_input_stream_read(stream, chr_rom, chr_rom_size, NULL, NULL);
+  }
 
   // Mapper
   int mapper = header.mapper_high << 4 | header.mapper_low;
