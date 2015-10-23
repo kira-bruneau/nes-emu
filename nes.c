@@ -1,16 +1,22 @@
 #include <stdio.h>
 
 #include "nes.h"
-#include "cartridge.h"
 #include "memory.h"
+#include "cpu.h"
 
-NES * nes_new(GFile * rom_file) {
+struct NES {
+  Memory * mem;
+  CPU * cpu;
+};
+
+NES * nes_new(void) {
   NES * nes = g_malloc(sizeof(NES));
-
-  Cartridge * cartridge = cartridge_new(rom_file);
-  Memory * memory = memory_new(cartridge);
-  nes->cpu = cpu_new(memory);
-
-  cpu_test_interactive(nes->cpu);
+  nes->mem = memory_new();
+  nes->cpu = cpu_new(nes->mem);
   return nes;
+}
+
+void nes_load(NES * nes, Cartridge * cartridge) {
+  memory_map_cartridge(nes->mem, cartridge);
+  cpu_debug(nes->cpu);
 }

@@ -6,7 +6,7 @@ LDFLAGS += `pkg-config --libs $(EXTERNAL_LIBS)`
 main: main.c render.c events.c
 	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
 
-loader: loader.c nes.c cpu.c memory.c cartridge.c instructions.c
+loader: loader.c nes.c cpu.c memory.c cartridge.c
 	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
 
 clean:

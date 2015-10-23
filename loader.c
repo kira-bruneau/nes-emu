@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "util.h"
 #include "nes.h"
+#include "cartridge.h"
+#include "util.h"
 
 /**
  * Find ROM files recursively in a directory
@@ -96,7 +97,10 @@ int main() {
     return 0;
   }
 
-  NES * nes = nes_new(rom_file);
+  Cartridge * cartridge = cartridge_new(rom_file);
   g_object_unref(rom_file);
+
+  NES * nes = nes_new();
+  nes_load(nes, cartridge);
   return 0;
 }

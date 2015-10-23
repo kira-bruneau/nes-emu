@@ -1,12 +1,11 @@
 #ifndef NES_H
 #define NES_H
 
-#include "cpu.h"
+#include "cartridge.h"
 
-typedef struct NES {
-  CPU * cpu;
-} NES;
+typedef struct NES NES;
 
-NES * nes_new(GFile * rom_file);
+NES * nes_new(void);
+void nes_load(NES * nes, Cartridge * cartridge);
 
 #endif

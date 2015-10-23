@@ -1,29 +1,37 @@
 #include <glib.h>
+#include <string.h>
 #include <assert.h>
 
 #include "memory.h"
 
 #define RAM_MIN 0x0000
 #define RAM_MAX 0x2000
-#define MIRROR_SIZE 0x0800
+#define RAM_SIZE 0x0800
 
 #define ROM_MIN 0x8000
 #define ROM_MAX 0xFFFF
 
-Memory * memory_new(Cartridge * cartridge) {
+Memory * memory_new() {
   Memory * mem = g_malloc(sizeof(Memory));
-  mem->cartridge = cartridge;
-  mem->ram = g_malloc0(MIRROR_SIZE);
+  mem->ram = g_malloc0(RAM_SIZE);
+  mem->cartridge = NULL;
   return mem;
+}
+
+void memory_reset(Memory * mem) {
+  memset(mem->ram, 0, RAM_SIZE);
+}
+
+void memory_map_cartridge(Memory * mem, Cartridge * cartridge) {
+  mem->cartridge = cartridge;
 }
 
 byte memory_read(Memory * mem, uint16_t addr) {
   if (addr < RAM_MAX) {
     // Obtain value from first mirror in RAM
-    return mem->ram[addr % MIRROR_SIZE];
-  } else if (addr > ROM_MIN) {
+    return mem->ram[addr % RAM_SIZE];
+  } else if (addr > ROM_MIN && mem->cartridge != NULL) {
     // Obtain value from cartridge ROM
-    assert(mem->cartridge != NULL);
     return cartridge_read(mem->cartridge, addr - ROM_MIN);
   }
 
@@ -39,7 +47,7 @@ uint16_t memory_read16(Memory * mem, uint16_t addr) {
 void memory_write(Memory * mem, uint16_t addr, byte val) {
   if (addr < RAM_MAX) {
     // Set value to first mirror in RAM
-    mem->ram[addr % MIRROR_SIZE] = val;
+    mem->ram[addr % RAM_SIZE] = val;
   }
 }
 
