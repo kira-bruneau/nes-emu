@@ -20,8 +20,8 @@ struct CPU {
       byte z : 1;
       byte i : 1;
       byte d : 1;
-      byte b : 1;
-      byte e : 1;
+      byte b : 1; // undefined
+      byte e : 1; // undefined
       byte v : 1;
       byte n : 1;
     };
@@ -38,13 +38,12 @@ CPU * cpu_new(Memory * mem) {
 }
 
 void cpu_reset(CPU * cpu) {
-  cpu->pc = 0xC000;
+  cpu->pc = 0xC000; // ? when not nestest
   cpu->sp = 0xFD;
   cpu->a = 0;
   cpu->x = 0;
   cpu->y = 0;
-  cpu->status = 0;
-  cpu->e = 1;
+  cpu->status = 0x24; // 0x34 when not nestest
 }
 
 // Obtain the next byte in memory and increment PC
@@ -66,9 +65,10 @@ void cpu_next_instr(CPU * cpu) {
   byte opcode = cpu_next_memory(cpu);
   Instruction instruction = opcode_instruction[opcode];
 
-  Address addr;
-  addr.val = 0;
-  addr.null = false;
+  Address addr = {
+    .val = 0,
+    .null = false
+  };
 
   switch (opcode_addressing_mode[opcode]) {
   case ADDRMODE_0:
@@ -154,27 +154,57 @@ static void cpu_compare(CPU * cpu, byte a, byte b) {
   cpu_zn(cpu, result);
 }
 
+/**
+ * Pure shift functions
+ */
+static byte asl(byte val) {
+  return val;
+}
+
+static byte lsr(byte val) {
+  return val;
+}
+
+static byte rol(byte val) {
+  return val;
+}
+
+static byte ror(byte val) {
+  return val;
+}
+
 /*
  * Official instructions
  */
 void cpu_adc(CPU * cpu, Address addr) {
   byte a = cpu->a;
   byte b = memory_read(cpu->mem, addr.val);
+
   uint16_t result = a - b - cpu->c;
+  cpu->a = result;
   cpu->c = result > 0xFF;
   cpu->v = (a^b)&0x80 && ((a^result)&0x80) != 0;
   cpu_zn(cpu, result);
-  cpu->a = result;
 }
 
 void cpu_and(CPU * cpu, Address addr) {
   byte result = cpu->a & memory_read(cpu->mem, addr.val);
-  cpu_zn(cpu, result);
   cpu->a = result;
+  cpu_zn(cpu, result);
 }
 
 void cpu_asl(CPU * cpu, Address addr) {
-  printf("STUB\n");
+  byte result;
+
+  if (addr.null) {
+    result = asl(cpu->a);
+    cpu->a = result;
+  } else {
+    result = asl(memory_read(cpu->mem, addr.val));
+    memory_write(cpu->mem, addr.val, result);
+  }
+
+  cpu_zn(cpu, result);
 }
 
 void cpu_bcc(CPU * cpu, Address addr) {
@@ -197,7 +227,7 @@ void cpu_beq(CPU * cpu, Address addr) {
 
 void cpu_bit(CPU * cpu, Address addr) {
   byte val = memory_read(cpu->mem, addr.val);
-  cpu->z = val & cpu->a;
+  cpu->z = (val & cpu->a) == 0;
   cpu->v = (val >> 6) & 1;
   cpu->n = (val >> 7) & 1;
 }
@@ -221,10 +251,14 @@ void cpu_bpl(CPU * cpu, Address addr) {
 }
 
 void cpu_brk(CPU * cpu, Address addr) {
-  cpu_push16(cpu, cpu->pc);
+  static const Address interrupt_addr = {
+    .val = 0xFFFE,
+    .null = false
+  };
+
+  cpu_jsr(cpu, interrupt_addr);
   cpu_php(cpu, addr);
   cpu_sei(cpu, addr);
-  cpu->pc = memory_read(cpu->mem, 0xFFFE);
 }
 
 void cpu_bvc(CPU * cpu, Address addr) {
@@ -272,44 +306,44 @@ void cpu_cpy(CPU * cpu, Address addr) {
 
 void cpu_dec(CPU * cpu, Address addr) {
   byte result = memory_read(cpu->mem, addr.val) - 1;
-  cpu_zn(cpu, result);
   memory_write(cpu->mem, addr.val, result);
+  cpu_zn(cpu, result);
 }
 
 void cpu_dex(CPU * cpu, Address addr) {
   byte result = cpu->x - 1;
-  cpu_zn(cpu, result);
   cpu->x = result;
+  cpu_zn(cpu, result);
 }
 
 void cpu_dey(CPU * cpu, Address addr) {
   byte result = cpu->y - 1;
-  cpu_zn(cpu, result);
   cpu->y = result;
+  cpu_zn(cpu, result);
 }
 
 void cpu_eor(CPU * cpu, Address addr) {
   byte result = cpu->a ^ memory_read(cpu->mem, addr.val);
-  cpu_zn(cpu, result);
   cpu->a = result;
+  cpu_zn(cpu, result);
 }
 
 void cpu_inc(CPU * cpu, Address addr) {
   byte result = memory_read(cpu->mem, addr.val) + 1;
-  cpu_zn(cpu, result);
   memory_write(cpu->mem, addr.val, result);
+  cpu_zn(cpu, result);
 }
 
 void cpu_inx(CPU * cpu, Address addr) {
   byte result = cpu->x + 1;
-  cpu_zn(cpu, result);
   cpu->x = result;
+  cpu_zn(cpu, result);
 }
 
 void cpu_iny(CPU * cpu, Address addr) {
   byte result = cpu->y + 1;
-  cpu_zn(cpu, result);
   cpu->y = result;
+  cpu_zn(cpu, result);
 }
 
 void cpu_jmp(CPU * cpu, Address addr) {
@@ -323,33 +357,44 @@ void cpu_jsr(CPU * cpu, Address addr) {
 
 void cpu_lda(CPU * cpu, Address addr) {
   byte val = memory_read(cpu->mem, addr.val);
-  cpu_zn(cpu, val);
   cpu->a = val;
+  cpu_zn(cpu, val);
 }
 
 void cpu_ldx(CPU * cpu, Address addr) {
   byte val = memory_read(cpu->mem, addr.val);
-  cpu_zn(cpu, val);
   cpu->x = val;
+  cpu_zn(cpu, val);
 }
 
 void cpu_ldy(CPU * cpu, Address addr) {
   byte val = memory_read(cpu->mem, addr.val);
-  cpu_zn(cpu, val);
   cpu->y = val;
+  cpu_zn(cpu, val);
 }
 
 void cpu_lsr(CPU * cpu, Address addr) {
-  printf("STUB\n");
+  byte result;
+
+  if (addr.null) {
+    result = lsr(cpu->a);
+    cpu->a = result;
+  } else {
+    result = lsr(memory_read(cpu->mem, addr.val));
+    memory_write(cpu->mem, addr.val, result);
+  }
+
+  cpu_zn(cpu, result);
 }
 
 void cpu_nop(CPU * cpu, Address addr) {
+
 }
 
 void cpu_ora(CPU * cpu, Address addr) {
   byte result = cpu->a | memory_read(cpu->mem, addr.val);
-  cpu_zn(cpu, result);
   cpu->a = result;
+  cpu_zn(cpu, result);
 }
 
 void cpu_pha(CPU * cpu, Address addr) {
@@ -357,30 +402,50 @@ void cpu_pha(CPU * cpu, Address addr) {
 }
 
 void cpu_php(CPU * cpu, Address addr) {
-  cpu_push(cpu, cpu->status);
+  cpu_push(cpu, cpu->status | 0x30);
 }
 
 void cpu_pla(CPU * cpu, Address addr) {
   byte val = cpu_pull(cpu);
-  cpu_zn(cpu, val);
   cpu->a = val;
+  cpu_zn(cpu, val);
 }
 
 void cpu_plp(CPU * cpu, Address addr) {
-  cpu->status = cpu_pull(cpu);
+  cpu->status = (cpu_pull(cpu) & ~0x30) | (cpu->status & 0x30);
 }
 
 void cpu_rol(CPU * cpu, Address addr) {
-  printf("STUB\n");
+  byte result;
+
+  if (addr.null) {
+    result = rol(cpu->a);
+    cpu->a = result;
+  } else {
+    result = rol(memory_read(cpu->mem, addr.val));
+    memory_write(cpu->mem, addr.val, result);
+  }
+
+  cpu_zn(cpu, result);
 }
 
 void cpu_ror(CPU * cpu, Address addr) {
-  printf("STUB\n");
+  byte result;
+
+  if (addr.null) {
+    result = ror(cpu->a);
+    cpu->a = result;
+  } else {
+    result = ror(memory_read(cpu->mem, addr.val));
+    memory_write(cpu->mem, addr.val, result);
+  }
+
+  cpu_zn(cpu, result);
 }
 
 void cpu_rti(CPU * cpu, Address addr) {
-  cpu->status = cpu_pull(cpu);
-  cpu->pc = cpu_pull16(cpu);
+  cpu_plp(cpu, addr);
+  cpu_rts(cpu, addr);
 }
 
 void cpu_rts(CPU * cpu, Address addr) {
@@ -391,10 +456,10 @@ void cpu_sbc(CPU * cpu, Address addr) {
   byte a = cpu->a;
   byte b = memory_read(cpu->mem, addr.val);
   uint16_t result = a - b - cpu->c;
+  cpu->a = result;
   cpu->c = result > 0xFF;
   cpu->v = (a^b)&0x80 && ((a^result)&0x80) != 0;
   cpu_zn(cpu, result);
-  cpu->a = result;
 }
 
 void cpu_sec(CPU * cpu, Address addr) {
@@ -423,38 +488,38 @@ void cpu_sty(CPU * cpu, Address addr) {
 
 void cpu_tax(CPU * cpu, Address addr) {
   byte val = cpu->a;
-  cpu_zn(cpu, val);
   cpu->x = val;
+  cpu_zn(cpu, val);
 }
 
 void cpu_tay(CPU * cpu, Address addr) {
   byte val = cpu->a;
-  cpu_zn(cpu, val);
   cpu->y = val;
+  cpu_zn(cpu, val);
 }
 
 void cpu_tsx(CPU * cpu, Address addr) {
   byte val = cpu->sp;
-  cpu_zn(cpu, val);
   cpu->x = val;
+  cpu_zn(cpu, val);
 }
 
 void cpu_txa(CPU * cpu, Address addr) {
   byte val = cpu->x;
-  cpu_zn(cpu, val);
   cpu->a = val;
+  cpu_zn(cpu, val);
 }
 
 void cpu_txs(CPU * cpu, Address addr) {
   byte val = cpu->x;
-  cpu_zn(cpu, val);
   cpu->sp = val;
+  cpu_zn(cpu, val);
 }
 
 void cpu_tya(CPU * cpu, Address addr) {
   byte val = cpu->y;
-  cpu_zn(cpu, val);
   cpu->a = val;
+  cpu_zn(cpu, val);
 }
 
 /*
