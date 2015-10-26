@@ -12,16 +12,16 @@ typedef enum Mirror {
 } Mirror;
 
 typedef struct Cartridge {
-  size_t prg_rom_size;
   byte * prg_rom;
-
-  size_t chr_rom_size;
   byte * chr_rom;
   
-  int mapper;
-  Mirror mirror;
+  byte prg_rom_size;
+  byte chr_rom_size;
   
-  bool prg_ram;
+  byte mapper;
+  
+  Mirror mirror : 2;
+  bool prg_ram : 1;
 } Cartridge;
 
 Cartridge * cartridge_new(GFile * rom_file);

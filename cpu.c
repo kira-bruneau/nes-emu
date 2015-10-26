@@ -15,6 +15,8 @@
  */
 
 struct CPU {
+  Memory * mem;
+
   uint16_t pc;
   byte sp;
   byte a, x, y;
@@ -32,8 +34,6 @@ struct CPU {
       byte n : 1;
     };
   };
-
-  Memory * mem;
 };
 
 CPU * cpu_new(Memory * mem) {

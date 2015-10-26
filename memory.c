@@ -51,7 +51,7 @@ uint16_t memory_read16(Memory * mem, uint16_t addr) {
 
 void memory_write(Memory * mem, uint16_t addr, byte val) {
   if (addr < RAM_MAX) {
-    // Set value to first mirror in RAM
+    // Write value to first mirror in RAM
     mem->ram[addr % RAM_SIZE] = val;
   }
 }

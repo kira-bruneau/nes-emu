@@ -69,27 +69,29 @@ Cartridge * cartridge_new(GFile * rom_file) {
   }
 
   // Read PRG ROM data
-  size_t prg_rom_size = 0;
-  byte * prg_rom = NULL;
-  if (header.prg_rom_size != 0) {
-    prg_rom_size = 16384 * header.prg_rom_size;
-    prg_rom = g_malloc(prg_rom_size);
-    g_input_stream_read(stream, prg_rom, prg_rom_size, NULL, NULL);
+  byte * prg_rom;
+  byte prg_rom_size = header.prg_rom_size;
+  if (prg_rom_size != 0) {
+    prg_rom = g_malloc(prg_rom_size << 14);
+    g_input_stream_read(stream, prg_rom, prg_rom_size << 14, NULL, NULL);
+  } else {
+    prg_rom = NULL;
   }
 
   // Read CHR ROM data
-  size_t chr_rom_size = 0;
-  byte * chr_rom = NULL;
-  if (header.chr_rom_size != 0) {
-    chr_rom_size = 8192 * header.chr_rom_size;
-    chr_rom = g_malloc(chr_rom_size);
-    g_input_stream_read(stream, chr_rom, chr_rom_size, NULL, NULL);
+  void * chr_rom;
+  byte chr_rom_size = header.chr_rom_size;
+  if (chr_rom_size != 0) {
+    chr_rom = g_malloc(chr_rom_size << 13);
+    g_input_stream_read(stream, chr_rom, chr_rom_size << 13, NULL, NULL);
+  } else {
+    chr_rom = NULL;
   }
 
   g_input_stream_close(stream, NULL, NULL);
 
   // Mapper
-  int mapper = header.mapper_high << 4 | header.mapper_low;
+  byte mapper = header.mapper_high << 4 | header.mapper_low;
 
   // Mirroring
   Mirror mirror;
@@ -101,10 +103,10 @@ Cartridge * cartridge_new(GFile * rom_file) {
     mirror = MIRROR_HORIZONTAL;
   }
 
-  cartridge->prg_rom_size = prg_rom_size;
   cartridge->prg_rom = prg_rom;
-  cartridge->chr_rom_size = chr_rom_size;
   cartridge->chr_rom = chr_rom;
+  cartridge->prg_rom_size = prg_rom_size;
+  cartridge->chr_rom_size = chr_rom_size;
   cartridge->mapper = mapper;
   cartridge->mirror = mirror;
   cartridge->prg_ram = header.prg_ram;
@@ -113,5 +115,5 @@ Cartridge * cartridge_new(GFile * rom_file) {
 }
 
 byte cartridge_read(Cartridge * cartridge, uint16_t addr) {
-  return cartridge->prg_rom[addr % cartridge->prg_rom_size];
+  return cartridge->prg_rom[addr & (cartridge->prg_rom_size << 14) - 1];
 }
