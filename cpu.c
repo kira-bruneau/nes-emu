@@ -711,13 +711,14 @@ bool cpu_debug_reset(CPU * cpu, const char * buffer) {
 }
 
 bool cpu_debug_test(CPU * cpu, const char * buffer) {
-  cpu_debug_reset(cpu, buffer);
-
   char * ptr;
   int tolerance = strtol(buffer, &ptr, 0);
   if (ptr == buffer) {
     tolerance = 1;
   }
+
+  cpu_debug_reset(cpu, buffer);
+  printf("\n");
 
   FILE * fp = fopen("sub-nestest.log", "r");
 
@@ -725,10 +726,13 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
   char test[128], debug[128];
   while (tolerance != 0 && fgets(test, ARRAY_LENGTH(test), fp) != NULL) {
     cpu_debug_instr(cpu, debug);
+    printf("%s", debug);
 
     if (strcmp(debug, test) != 0) {
-      printf("Test Failed (line %i):\n  Expected: %s  Obtained: %s", lineno, test, debug);
-      tolerance--;
+      printf("\nTest Failed (line %i):\nExpected: %sObtained: %s", lineno, test, debug);
+      if (--tolerance != 0) {
+        printf("\n");
+      }
     }
 
     cpu_next_instr(cpu);
@@ -737,6 +741,7 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
 
   fclose(fp);
 
+  printf("\n");
   cpu_debug_reset(cpu, buffer);
   return true;
 }
