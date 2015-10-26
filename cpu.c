@@ -637,7 +637,12 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
     i += sprintf(buffer + i, "%02X     %s $%02X = %02X                    ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, memory_read(cpu->mem, pc + 1)));
     break;
   case ADDRMODE_3:
-    i += sprintf(buffer + i, "%02X %02X  %s $%04X                       ", memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, pc + 2), name, memory_read16(cpu->mem, pc + 1));
+    // Do not resolve address when jumping
+    if (instruction == INSTR_JMP || instruction == INSTR_JSR) {
+      i += sprintf(buffer + i, "%02X %02X  %s $%04X                       ", memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, pc + 2), name, memory_read16(cpu->mem, pc + 1));
+    } else {
+      i += sprintf(buffer + i, "%02X %02X  %s $%04X = %02X                  ", memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, pc + 2), name, memory_read16(cpu->mem, pc + 1), memory_read(cpu->mem, memory_read16(cpu->mem, pc + 1)));
+    }
     break;
   case ADDRMODE_8:
     i += sprintf(buffer + i, "%02X     %s $%02X                       ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1) + pc + 2);
