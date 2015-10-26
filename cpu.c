@@ -611,75 +611,116 @@ void cpu_xaa(CPU * cpu, Address addr) {
 /**
  * Debugging
  */
-void cpu_debug_instr(CPU * cpu, char * buffer) {
-  int i = 0;
-
-  uint16_t pc = cpu->pc;
-  byte sp = cpu->sp;
-  byte a = cpu->a;
-  byte x = cpu->x;
-  byte y = cpu->y;
-  byte status = cpu->status;
-
-  i += sprintf(buffer + i, "%04X  %02X ", pc, memory_read(cpu->mem, pc));
-
-  byte opcode = memory_read(cpu->mem, pc);
-  Instruction instruction = opcode_instruction[opcode];
+static int debug_addr_mode_0(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
 
-  switch (opcode_addressing_mode[opcode]) {
-  case ADDRMODE_0:
-    // Specify that A register is used for rotations without a value
-    if (instruction == INSTR_ASL || instruction == INSTR_LSR || instruction == INSTR_ROL || instruction == INSTR_ROR) {
-      i += sprintf(buffer + i, "       %s A                           ", name);
-    } else {
-      i += sprintf(buffer + i, "       %s                             ", name);
-    }
-    break;
-  case ADDRMODE_1:
-    i += sprintf(buffer + i, "%02X     %s #$%02X                        ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1));
-    break;
-  case ADDRMODE_2:
-    i += sprintf(buffer + i, "%02X     %s $%02X = %02X                    ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, memory_read(cpu->mem, pc + 1)));
-    break;
-  case ADDRMODE_3:
-    // Do not resolve address when jumping
-    if (instruction == INSTR_JMP || instruction == INSTR_JSR) {
-      i += sprintf(buffer + i, "%02X %02X  %s $%04X                       ", memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, pc + 2), name, memory_read16(cpu->mem, pc + 1));
-    } else {
-      i += sprintf(buffer + i, "%02X %02X  %s $%04X = %02X                  ", memory_read(cpu->mem, pc + 1), memory_read(cpu->mem, pc + 2), name, memory_read16(cpu->mem, pc + 1), memory_read(cpu->mem, memory_read16(cpu->mem, pc + 1)));
-    }
-    break;
-  case ADDRMODE_8:
-    i += sprintf(buffer + i, "%02X     %s $%02X                       ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1) + pc + 2);
-    break;
-  case ADDRMODE_B:
-    i += sprintf(buffer + i, "       %s                             ", name);
-    break;
-  case ADDRMODE_C:
-    i += sprintf(buffer + i, "       %s                             ", name);
-    break;
-  case ADDRMODE_9:
-    i += sprintf(buffer + i, "       %s                             ", name);
-    break;
-  case ADDRMODE_A:
-    i += sprintf(buffer + i, "       %s                             ", name);
-    break;
-  case ADDRMODE_4:
-    i += sprintf(buffer + i, "       %s                             ", name);
-    break;
-  case ADDRMODE_5:
-    i += sprintf(buffer + i, "       %s                             ", name);
-    break;
-  case ADDRMODE_6:
-    i += sprintf(buffer + i, "       %s                             ", name);
-    break;
-  case ADDRMODE_7:
-    i += sprintf(buffer + i, "       %s                             ", name);
-    break;
-  }
+  bool rotation =
+    instruction == INSTR_ASL ||
+    instruction == INSTR_LSR ||
+    instruction == INSTR_ROL ||
+    instruction == INSTR_ROR;
 
-  i += sprintf(buffer + i, "A:%02X X:%02X Y:%02X P:%02X SP:%02X\n", a, x, y, status, sp);
+  return sprintf(buffer, "       %s %s", name, rotation ? "A" : "");
+}
+
+static int debug_addr_mode_1(CPU * cpu, char * buffer, Instruction instruction) {
+  const char * name = instruction_name[instruction];
+  byte val = memory_read(cpu->mem, cpu->pc + 1);
+
+  return sprintf(buffer, "%02X     %s #$%02X", val, name, val);
+}
+
+static int debug_addr_mode_2(CPU * cpu, char * buffer, Instruction instruction) {
+  const char * name = instruction_name[instruction];
+  byte addr = memory_read(cpu->mem, cpu->pc + 1);
+  byte val = memory_read(cpu->mem, addr);
+
+  return sprintf(buffer, "%02X     %s $%02X = %02X", addr, name, addr, val);
+}
+
+static int debug_addr_mode_3(CPU * cpu, char * buffer, Instruction instruction) {
+  const char * name = instruction_name[instruction];
+  byte addr_low = memory_read(cpu->mem, cpu->pc + 1);
+  byte addr_high = memory_read(cpu->mem, cpu->pc + 2);
+  uint16_t addr = addr_high << 8 | addr_low;
+
+  if (instruction == INSTR_JMP || instruction == INSTR_JSR) {
+    return sprintf(buffer, "%02X %02X  %s $%04X", addr_low, addr_high, name, addr);
+  } else {
+    byte val = memory_read(cpu->mem, addr);
+    return sprintf(buffer, "%02X %02X  %s $%04X = %02X", addr_low, addr_high, name, addr, val);
+  }
+}
+
+static int debug_addr_mode_8(CPU * cpu, char * buffer, Instruction instruction) {
+  const char * name = instruction_name[instruction];
+  byte offset = memory_read(cpu->mem, cpu->pc + 1);
+  uint16_t addr = cpu->pc + 2 + offset;
+
+  return sprintf(buffer, "%02X     %s $%04X", offset, name, addr);
+}
+
+static int debug_addr_mode_B(CPU * cpu, char * buffer, Instruction instruction) {
+  return 0;
+}
+
+static int debug_addr_mode_C(CPU * cpu, char * buffer, Instruction instruction) {
+  return 0;
+}
+
+static int debug_addr_mode_9(CPU * cpu, char * buffer, Instruction instruction) {
+  return 0;
+}
+
+static int debug_addr_mode_A(CPU * cpu, char * buffer, Instruction instruction) {
+  return 0;
+}
+
+static int debug_addr_mode_4(CPU * cpu, char * buffer, Instruction instruction) {
+  return 0;
+}
+
+static int debug_addr_mode_5(CPU * cpu, char * buffer, Instruction instruction) {
+  return 0;
+}
+
+static int debug_addr_mode_6(CPU * cpu, char * buffer, Instruction instruction) {
+  return 0;
+}
+
+static int debug_addr_mode_7(CPU * cpu, char * buffer, Instruction instruction) {
+  return 0;
+}
+
+void cpu_debug_instr(CPU * cpu, char * buffer) {
+  int i = sprintf(buffer, "%04X  %02X ", cpu->pc, memory_read(cpu->mem, cpu->pc));
+
+  byte opcode = memory_read(cpu->mem, cpu->pc);
+  Instruction instruction = opcode_instruction[opcode];
+  AdressingMode adressing_mode = opcode_addressing_mode[opcode];
+
+  typedef int (*DebugAction)(CPU * cpu, char * buffer, Instruction instruction);
+  static const DebugAction addr_mode_debug[] = {
+    debug_addr_mode_0,
+    debug_addr_mode_1,
+    debug_addr_mode_2,
+    debug_addr_mode_3,
+    debug_addr_mode_4,
+    debug_addr_mode_5,
+    debug_addr_mode_6,
+    debug_addr_mode_7,
+    debug_addr_mode_8,
+    debug_addr_mode_9,
+    debug_addr_mode_A,
+    debug_addr_mode_B,
+    debug_addr_mode_C,
+  };
+
+  i += addr_mode_debug[adressing_mode](cpu, buffer + i, instruction);
+  sprintf(buffer + i, "%*c", i - 48, ' ');
+  i = 48;
+
+  i += sprintf(buffer + i, "A:%02X X:%02X Y:%02X P:%02X SP:%02X", cpu->a, cpu->x, cpu->y, cpu->status, cpu->sp);
 }
 
 bool cpu_debug_next(CPU * cpu, const char * buffer) {
@@ -690,9 +731,9 @@ bool cpu_debug_next(CPU * cpu, const char * buffer) {
   }
 
   while (num > 0) {
-    char debug[128];
+    char debug[74];
     cpu_debug_instr(cpu, debug);
-    printf("%s", debug);
+    printf("%s\n", debug);
     cpu_next_instr(cpu);
     num -= 1;
   }
@@ -736,13 +777,13 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
   cpu->status = 0x24;
 
   int lineno = 1;
-  char test[128], debug[128];
+  char test[75], debug[74];
   while (tolerance != 0 && fgets(test, ARRAY_LENGTH(test), fp) != NULL) {
     cpu_debug_instr(cpu, debug);
-    printf("%s", debug);
+    printf("%s\n", debug);
 
-    if (strcmp(debug, test) != 0) {
-      printf("\nTest Failed (line %i):\nExpected: %sObtained: %s", lineno, test, debug);
+    if (strncmp(debug, test, 73) != 0) {
+      printf("\nTest Failed (line %i):\nExpected: %sObtained: %s\n", lineno, test, debug);
       if (--tolerance != 0) {
         printf("\n");
       }
