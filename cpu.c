@@ -160,25 +160,6 @@ static void cpu_compare(CPU * cpu, byte a, byte b) {
   cpu_zn(cpu, result);
 }
 
-/**
- * Pure shift functions
- */
-static byte asl(byte val) {
-  return val;
-}
-
-static byte lsr(byte val) {
-  return val;
-}
-
-static byte rol(byte val) {
-  return val;
-}
-
-static byte ror(byte val) {
-  return val;
-}
-
 /*
  * Official instructions
  */
@@ -203,10 +184,14 @@ void cpu_asl(CPU * cpu, Address addr) {
   byte result;
 
   if (addr.null) {
-    result = asl(cpu->a);
+    result = cpu->a;
+    cpu->c = result >> 7 & 1;
+    result <<= 1;
     cpu->a = result;
   } else {
-    result = asl(memory_read(cpu->mem, addr.val));
+    result = memory_read(cpu->mem, addr.val);
+    cpu->c = result >> 7 & 1;
+    result <<= 1;
     memory_write(cpu->mem, addr.val, result);
   }
 
@@ -383,10 +368,14 @@ void cpu_lsr(CPU * cpu, Address addr) {
   byte result;
 
   if (addr.null) {
-    result = lsr(cpu->a);
+    result = cpu->a;
+    cpu->c = result & 1;
+    result >>= 1;
     cpu->a = result;
   } else {
-    result = lsr(memory_read(cpu->mem, addr.val));
+    result = memory_read(cpu->mem, addr.val);
+    cpu->c = result & 1;
+    result >>= 1;
     memory_write(cpu->mem, addr.val, result);
   }
 
@@ -422,13 +411,19 @@ void cpu_plp(CPU * cpu, Address addr) {
 }
 
 void cpu_rol(CPU * cpu, Address addr) {
-  byte result;
+  byte result, c;
 
   if (addr.null) {
-    result = rol(cpu->a);
+    result = cpu->a;
+    c = cpu->c;
+    cpu->c = result >> 7 & 1;
+    result = result << 1 | c;
     cpu->a = result;
   } else {
-    result = rol(memory_read(cpu->mem, addr.val));
+    result = memory_read(cpu->mem, addr.val);
+    c = cpu->c;
+    cpu->c = result >> 7 & 1;
+    result = result << 1 | c;
     memory_write(cpu->mem, addr.val, result);
   }
 
@@ -436,13 +431,19 @@ void cpu_rol(CPU * cpu, Address addr) {
 }
 
 void cpu_ror(CPU * cpu, Address addr) {
-  byte result;
+  byte result, c;
 
   if (addr.null) {
-    result = ror(cpu->a);
+    result = cpu->a;
+    c = cpu->c;
+    cpu->c = result & 1;
+    result = result >> 1 | c << 7;
     cpu->a = result;
   } else {
-    result = ror(memory_read(cpu->mem, addr.val));
+    result = memory_read(cpu->mem, addr.val);
+    c = cpu->c;
+    cpu->c = result & 1;
+    result = result >> 1 | c << 7;
     memory_write(cpu->mem, addr.val, result);
   }
 
@@ -628,7 +629,12 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
 
   switch (opcode_addressing_mode[opcode]) {
   case ADDRMODE_0:
-    i += sprintf(buffer + i, "       %s                             ", name);
+    // Specify that A register is used for rotations without a value
+    if (instruction == INSTR_ASL || instruction == INSTR_LSR || instruction == INSTR_ROL || instruction == INSTR_ROR) {
+      i += sprintf(buffer + i, "       %s A                           ", name);
+    } else {
+      i += sprintf(buffer + i, "       %s                             ", name);
+    }
     break;
   case ADDRMODE_1:
     i += sprintf(buffer + i, "%02X     %s #$%02X                        ", memory_read(cpu->mem, pc + 1), name, memory_read(cpu->mem, pc + 1));
