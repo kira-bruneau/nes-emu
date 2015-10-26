@@ -6,6 +6,22 @@
 #include "cartridge.h"
 #include "util.h"
 
+/**
+ * References:
+ * NesDoc: http://nesdev.com/NESDoc.pdf - p.11
+ * NesDev: http://wiki.nesdev.com/w/index.php/CPU_memory_map
+ */
+
+#define RAM_MIN 0x0000
+#define RAM_MAX 0x2000
+#define RAM_SIZE 0x0800
+
+#define STACK_MIN 0x0100
+#define STACK_MAX 0x0200
+
+#define ROM_MIN 0x8000
+#define ROM_MAX 0xFFFF
+
 typedef struct Memory {
   byte * ram;
   Cartridge * cartridge;

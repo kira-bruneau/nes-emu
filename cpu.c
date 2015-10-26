@@ -125,23 +125,23 @@ void cpu_next_instr(CPU * cpu) {
  * Stack operations
  */
 static void cpu_push(CPU * cpu, byte val) {
-  memory_write(cpu->mem, cpu->sp, val);
+  memory_write(cpu->mem, STACK_MIN + cpu->sp, val);
   cpu->sp -= 1;
 }
 
 static void cpu_push16(CPU * cpu, uint16_t val) {
-  memory_write16(cpu->mem, cpu->sp - 1, val);
+  memory_write16(cpu->mem, STACK_MIN + cpu->sp - 1, val);
   cpu->sp -= 2;
 }
 
 static byte cpu_pull(CPU * cpu) {
-  byte val = memory_read(cpu->mem, cpu->sp + 1);
+  byte val = memory_read(cpu->mem, STACK_MIN + cpu->sp + 1);
   cpu->sp += 1;
   return val;
 }
 
 static uint16_t cpu_pull16(CPU * cpu) {
-  uint16_t val = memory_read16(cpu->mem, cpu->sp + 1);
+  uint16_t val = memory_read16(cpu->mem, STACK_MIN + cpu->sp + 1);
   cpu->sp += 2;
   return val;
 }
@@ -732,12 +732,8 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
 
   FILE * fp = fopen("sub-nestest.log", "r");
 
-  // Handle test quirks
+  // Handle status register quirk for this test
   cpu->status = 0x24;
-
-  // I need to figure out why the test requires memory to be initialized to this
-  memory_write16(cpu->mem, 0x017F, 0x69);
-  memory_write16(cpu->mem, 0x0180, 0x33);
 
   int lineno = 1;
   char test[128], debug[128];

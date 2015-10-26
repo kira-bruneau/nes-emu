@@ -4,18 +4,6 @@
 
 #include "memory.h"
 
-/**
- * References:
- * NesDev: http://wiki.nesdev.com/w/index.php/CPU_memory_map
- */
-
-#define RAM_MIN 0x0000
-#define RAM_MAX 0x2000
-#define RAM_SIZE 0x0800
-
-#define ROM_MIN 0x8000
-#define ROM_MAX 0xFFFF
-
 Memory * memory_new() {
   Memory * mem = g_malloc(sizeof(Memory));
   mem->ram = g_malloc0(RAM_SIZE);
