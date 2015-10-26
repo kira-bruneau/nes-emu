@@ -520,7 +520,6 @@ void cpu_txa(CPU * cpu, Address addr) {
 void cpu_txs(CPU * cpu, Address addr) {
   byte val = cpu->x;
   cpu->sp = val;
-  cpu_zn(cpu, val);
 }
 
 void cpu_tya(CPU * cpu, Address addr) {
