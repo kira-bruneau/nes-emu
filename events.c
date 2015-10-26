@@ -29,8 +29,8 @@ static Event key_to_event(int key) {
     {EVENT_DPAD_RIGHT, GLFW_KEY_F},
     {EVENT_SELECT, GLFW_KEY_G},
     {EVENT_START, GLFW_KEY_H},
-    {EVENT_A, GLFW_KEY_J},
-    {EVENT_B, GLFW_KEY_K}
+    {EVENT_A, GLFW_KEY_K},
+    {EVENT_B, GLFW_KEY_J}
   };
 
   size_t i;
