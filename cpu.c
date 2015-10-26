@@ -151,7 +151,7 @@ static uint16_t cpu_pull16(CPU * cpu) {
  */
 static void cpu_zn(CPU * cpu, byte val) {
   cpu->z = val == 0;
-  cpu->n = (val >> 7) & 1;
+  cpu->n = val >> 7 & 1;
 }
 
 static void cpu_compare(CPU * cpu, byte a, byte b) {
@@ -186,10 +186,10 @@ void cpu_adc(CPU * cpu, Address addr) {
   byte a = cpu->a;
   byte b = memory_read(cpu->mem, addr.val);
 
-  uint16_t result = a - b - cpu->c;
+  uint16_t result = a + b + cpu->c;
   cpu->a = result;
   cpu->c = result > 0xFF;
-  cpu->v = (a^b)&0x80 && ((a^result)&0x80) != 0;
+  cpu->v = !((a^b) >> 7 & 1) && ((result^a) >> 7 & 1);
   cpu_zn(cpu, result);
 }
 
@@ -234,8 +234,8 @@ void cpu_beq(CPU * cpu, Address addr) {
 void cpu_bit(CPU * cpu, Address addr) {
   byte val = memory_read(cpu->mem, addr.val);
   cpu->z = (val & cpu->a) == 0;
-  cpu->v = (val >> 6) & 1;
-  cpu->n = (val >> 7) & 1;
+  cpu->v = val >> 6 & 1;
+  cpu->n = val >> 7 & 1;
 }
 
 void cpu_bmi(CPU * cpu, Address addr) {
@@ -461,10 +461,11 @@ void cpu_rts(CPU * cpu, Address addr) {
 void cpu_sbc(CPU * cpu, Address addr) {
   byte a = cpu->a;
   byte b = memory_read(cpu->mem, addr.val);
-  uint16_t result = a - b - cpu->c;
+
+  int16_t result = a - b - (1 - cpu->c);
   cpu->a = result;
-  cpu->c = result > 0xFF;
-  cpu->v = (a^b)&0x80 && ((a^result)&0x80) != 0;
+  cpu->c = result >= 0x00;
+  cpu->v = ((a^b) >> 7 & 1) && ((result^a) >> 7 & 1);
   cpu_zn(cpu, result);
 }
 
