@@ -357,7 +357,7 @@ void cpu_jmp(CPU * cpu, Address addr) {
 }
 
 void cpu_jsr(CPU * cpu, Address addr) {
-  cpu_push16(cpu, cpu->pc);
+  cpu_push16(cpu, cpu->pc - 1);
   cpu->pc = addr.val;
 }
 
@@ -451,11 +451,11 @@ void cpu_ror(CPU * cpu, Address addr) {
 
 void cpu_rti(CPU * cpu, Address addr) {
   cpu_plp(cpu, addr);
-  cpu_rts(cpu, addr);
+  cpu->pc = cpu_pull16(cpu);
 }
 
 void cpu_rts(CPU * cpu, Address addr) {
-  cpu->pc = cpu_pull16(cpu);
+  cpu->pc = cpu_pull16(cpu) + 1;
 }
 
 void cpu_sbc(CPU * cpu, Address addr) {
