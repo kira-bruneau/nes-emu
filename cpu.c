@@ -611,6 +611,8 @@ void cpu_xaa(CPU * cpu, Address addr) {
 /**
  * Debugging
  */
+#define DEBUG_LINE_LENGTH 74
+
 static int debug_addr_mode_0(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
 
@@ -731,7 +733,7 @@ bool cpu_debug_next(CPU * cpu, const char * buffer) {
   }
 
   while (num > 0) {
-    char debug[74];
+    char debug[DEBUG_LINE_LENGTH];
     cpu_debug_instr(cpu, debug);
     printf("%s\n", debug);
     cpu_next_instr(cpu);
@@ -757,7 +759,7 @@ bool cpu_debug_goto(CPU * cpu, const char * buffer) {
 bool cpu_debug_reset(CPU * cpu, const char * buffer) {
   cpu_reset(cpu);
   memory_reset(cpu->mem);
-  printf("Reset NES\n");
+  printf("Reset to initial state\n");
   return true;
 }
 
@@ -777,12 +779,12 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
   cpu->status = 0x24;
 
   int lineno = 1;
-  char test[75], debug[74];
+  char test[DEBUG_LINE_LENGTH + 1], debug[DEBUG_LINE_LENGTH];
   while (tolerance != 0 && fgets(test, ARRAY_LENGTH(test), fp) != NULL) {
     cpu_debug_instr(cpu, debug);
     printf("%s\n", debug);
 
-    if (strncmp(debug, test, 73) != 0) {
+    if (strncmp(debug, test, DEBUG_LINE_LENGTH - 1) != 0) {
       printf("\nTest Failed (line %i):\nExpected: %sObtained: %s\n", lineno, test, debug);
       if (--tolerance != 0) {
         printf("\n");
