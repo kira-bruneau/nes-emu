@@ -77,44 +77,42 @@ void cpu_next_instr(CPU * cpu) {
   };
 
   switch (opcode_addressing_mode[opcode]) {
-  case ADDRMODE_0:
+  case ADDR_IMPLIED:
+  case ADDR_ACCUMULATOR:
     addr.null = true;
     break;
-  case ADDRMODE_1:
+  case ADDR_IMMEDIATE:
     addr.val = cpu->pc++;
     break;
-  case ADDRMODE_2:
+  case ADDR_ZERO_PAGE:
     addr.val = cpu_next_memory(cpu);
     break;
-  case ADDRMODE_3:
+  case ADDR_ABSOLUTE:
     addr.val = cpu_next_memory16(cpu);
     break;
-  case ADDRMODE_8:
+  case ADDR_RELATIVE:
     addr.val = cpu_next_memory(cpu) + cpu->pc;
     break;
-  case ADDRMODE_B:
+  case ADDR_ZERO_PAGE_X:
     addr.val = cpu_next_memory(cpu) + cpu->x;
     break;
-  case ADDRMODE_C:
+  case ADDR_ZERO_PAGE_Y:
     addr.val = cpu_next_memory(cpu) + cpu->y;
     break;
-  case ADDRMODE_9:
+  case ADDR_ABSOLUTE_X:
     addr.val = cpu_next_memory16(cpu) + cpu->x;
     break;
-  case ADDRMODE_A:
+  case ADDR_ABSOLUTE_Y:
     addr.val = cpu_next_memory16(cpu) + cpu->y;
     break;
-  case ADDRMODE_4:
+  case ADDR_INDIRECT:
     addr.val = memory_read16(cpu->mem, cpu_next_memory16(cpu));
     break;
-  case ADDRMODE_5:
+  case ADDR_INDIRECT_INDEXED:
     addr.val = memory_read(cpu->mem, cpu_next_memory(cpu)) + cpu->y;
     break;
-  case ADDRMODE_6:
+  case ADDR_INDEXED_INDIRECT:
     addr.val = memory_read(cpu->mem, cpu_next_memory(cpu) + cpu->x);
-    break;
-  case ADDRMODE_7:
-    addr.val = memory_read(cpu->mem, cpu_next_memory(cpu) + cpu->y);
     break;
   }
 
@@ -613,26 +611,24 @@ void cpu_xaa(CPU * cpu, Address addr) {
  */
 #define DEBUG_LINE_LENGTH 74
 
-static int debug_addr_mode_0(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_implied(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-
-  bool rotation =
-    instruction == INSTR_ASL ||
-    instruction == INSTR_LSR ||
-    instruction == INSTR_ROL ||
-    instruction == INSTR_ROR;
-
-  return sprintf(buffer, "       %s %s", name, rotation ? "A" : "");
+  return sprintf(buffer, "       %s", name);
 }
 
-static int debug_addr_mode_1(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_accumulator(CPU * cpu, char * buffer, Instruction instruction) {
+  const char * name = instruction_name[instruction];
+  return sprintf(buffer, "       %s A", name);
+}
+
+static int debug_addr_immediate(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
   byte val = memory_read(cpu->mem, cpu->pc + 1);
 
   return sprintf(buffer, "%02X     %s #$%02X", val, name, val);
 }
 
-static int debug_addr_mode_2(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_zero_page(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
   byte addr = memory_read(cpu->mem, cpu->pc + 1);
   byte val = memory_read(cpu->mem, addr);
@@ -640,7 +636,7 @@ static int debug_addr_mode_2(CPU * cpu, char * buffer, Instruction instruction) 
   return sprintf(buffer, "%02X     %s $%02X = %02X", addr, name, addr, val);
 }
 
-static int debug_addr_mode_3(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_absolute(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
   byte addr_low = memory_read(cpu->mem, cpu->pc + 1);
   byte addr_high = memory_read(cpu->mem, cpu->pc + 2);
@@ -654,7 +650,7 @@ static int debug_addr_mode_3(CPU * cpu, char * buffer, Instruction instruction) 
   }
 }
 
-static int debug_addr_mode_8(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_relative(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
   byte offset = memory_read(cpu->mem, cpu->pc + 1);
   uint16_t addr = cpu->pc + 2 + offset;
@@ -662,36 +658,44 @@ static int debug_addr_mode_8(CPU * cpu, char * buffer, Instruction instruction) 
   return sprintf(buffer, "%02X     %s $%04X", offset, name, addr);
 }
 
-static int debug_addr_mode_B(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_zero_page_x(CPU * cpu, char * buffer, Instruction instruction) {
   return 0;
 }
 
-static int debug_addr_mode_C(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_zero_page_y(CPU * cpu, char * buffer, Instruction instruction) {
   return 0;
 }
 
-static int debug_addr_mode_9(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_absolute_x(CPU * cpu, char * buffer, Instruction instruction) {
   return 0;
 }
 
-static int debug_addr_mode_A(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_absolute_y(CPU * cpu, char * buffer, Instruction instruction) {
   return 0;
 }
 
-static int debug_addr_mode_4(CPU * cpu, char * buffer, Instruction instruction) {
+static int debug_addr_indirect(CPU * cpu, char * buffer, Instruction instruction) {
   return 0;
 }
 
-static int debug_addr_mode_5(CPU * cpu, char * buffer, Instruction instruction) {
-  return 0;
+static int debug_addr_indirect_indexed(CPU * cpu, char * buffer, Instruction instruction) {
+  const char * name = instruction_name[instruction];
+  byte offset = memory_read(cpu->mem, cpu->pc + 1);
+  byte addr_addr = offset + cpu->x;
+  uint16_t addr = memory_read16(cpu->mem, addr_addr);  // This should wrap around the zero page
+  byte val = memory_read(cpu->mem, addr);
+
+  return sprintf(buffer, "%02X     %s ($%02X,X) @ %02X = %04X = %02X", offset, name, offset, addr_addr, addr, val);
 }
 
-static int debug_addr_mode_6(CPU * cpu, char * buffer, Instruction instruction) {
-  return 0;
-}
+static int debug_addr_indexed_indirect(CPU * cpu, char * buffer, Instruction instruction) {
+  const char * name = instruction_name[instruction];
+  byte offset = memory_read(cpu->mem, cpu->pc + 1);
+  byte addr_addr = offset + cpu->y;
+  uint16_t addr = memory_read16(cpu->mem, addr_addr); // This should wrap around the zero page
+  byte val = memory_read(cpu->mem, addr);
 
-static int debug_addr_mode_7(CPU * cpu, char * buffer, Instruction instruction) {
-  return 0;
+  return sprintf(buffer, "%02X     %s ($%02X,Y) @ %02X = %04X = %02X", offset, name, offset, addr_addr, addr, val);
 }
 
 void cpu_debug_instr(CPU * cpu, char * buffer) {
@@ -703,19 +707,19 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
 
   typedef int (*DebugAction)(CPU * cpu, char * buffer, Instruction instruction);
   static const DebugAction addr_mode_debug[] = {
-    debug_addr_mode_0,
-    debug_addr_mode_1,
-    debug_addr_mode_2,
-    debug_addr_mode_3,
-    debug_addr_mode_4,
-    debug_addr_mode_5,
-    debug_addr_mode_6,
-    debug_addr_mode_7,
-    debug_addr_mode_8,
-    debug_addr_mode_9,
-    debug_addr_mode_A,
-    debug_addr_mode_B,
-    debug_addr_mode_C,
+    debug_addr_implied,
+    debug_addr_accumulator,
+    debug_addr_immediate,
+    debug_addr_zero_page,
+    debug_addr_absolute,
+    debug_addr_relative,
+    debug_addr_zero_page_x,
+    debug_addr_zero_page_y,
+    debug_addr_absolute_x,
+    debug_addr_absolute_y,
+    debug_addr_indirect,
+    debug_addr_indirect_indexed,
+    debug_addr_indexed_indirect,
   };
 
   i += addr_mode_debug[adressing_mode](cpu, buffer + i, instruction);

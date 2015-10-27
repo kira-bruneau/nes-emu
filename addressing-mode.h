@@ -2,35 +2,35 @@
 #define ADRESSING_MODE
 
 typedef enum AdressingMode {
-  ADDRMODE_0,
-  ADDRMODE_1,
-  ADDRMODE_2,
-  ADDRMODE_3,
-  ADDRMODE_4,
-  ADDRMODE_5,
-  ADDRMODE_6,
-  ADDRMODE_7,
-  ADDRMODE_8,
-  ADDRMODE_9,
-  ADDRMODE_A,
-  ADDRMODE_B,
-  ADDRMODE_C,
+  ADDR_IMPLIED,
+  ADDR_ACCUMULATOR,
+  ADDR_IMMEDIATE,
+  ADDR_ZERO_PAGE,
+  ADDR_ABSOLUTE,
+  ADDR_RELATIVE,
+  ADDR_ZERO_PAGE_X,
+  ADDR_ZERO_PAGE_Y,
+  ADDR_ABSOLUTE_X,
+  ADDR_ABSOLUTE_Y,
+  ADDR_INDIRECT,
+  ADDR_INDIRECT_INDEXED,
+  ADDR_INDEXED_INDIRECT,
 } AdressingMode;
 
 const char * addressing_mode_string[] = {
   "",
+  "A"
   "#i",
   "d",
   "a",
+  "*+d",
+  "d,x",
+  "d,y"
+  "a,x",
+  "a,y",
   "(a)",
   "(d),y",
   "(d,x)",
-  "(d,y)",
-  "*+d",
-  "a,x",
-  "a,y",
-  "d,x",
-  "d,y"
 };
 
 #endif
