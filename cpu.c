@@ -98,10 +98,10 @@ void cpu_next_instr(CPU * cpu) {
     addr.val = cpu_next_memory(cpu) + cpu->pc;
     break;
   case ADDR_ZERO_PAGE_X:
-    addr.val = cpu_next_memory(cpu) + cpu->x;
+    addr.val = (byte)(cpu_next_memory(cpu) + cpu->x);
     break;
   case ADDR_ZERO_PAGE_Y:
-    addr.val = cpu_next_memory(cpu) + cpu->y;
+    addr.val = (byte)(cpu_next_memory(cpu) + cpu->y);
     break;
   case ADDR_ABSOLUTE_X:
     addr.val = cpu_next_memory16(cpu) + cpu->x;
