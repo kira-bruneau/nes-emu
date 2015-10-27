@@ -37,6 +37,12 @@ uint16_t memory_read16(Memory * mem, uint16_t addr) {
   return high << 8 | low;
 }
 
+uint16_t memory_zero_page_read16(Memory * mem, byte addr) {
+  byte low = memory_read(mem, (byte)addr);
+  byte high = memory_read(mem, (byte)(addr + 1));
+  return high << 8 | low;
+}
+
 void memory_write(Memory * mem, uint16_t addr, byte val) {
   if (addr < RAM_MAX) {
     // Write value to first mirror in RAM

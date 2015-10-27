@@ -113,10 +113,10 @@ void cpu_next_instr(CPU * cpu) {
     addr.val = memory_read16(cpu->mem, cpu_next_memory16(cpu));
     break;
   case ADDR_INDIRECT_INDEXED:
-    addr.val = memory_read(cpu->mem, cpu_next_memory(cpu)) + cpu->y;
+    addr.val = memory_zero_page_read16(cpu->mem, cpu_next_memory(cpu)) + cpu->y;
     break;
   case ADDR_INDEXED_INDIRECT:
-    addr.val = memory_read(cpu->mem, cpu_next_memory(cpu) + cpu->x);
+    addr.val = memory_zero_page_read16(cpu->mem, cpu_next_memory(cpu) + cpu->x);
     break;
   }
 
@@ -684,22 +684,22 @@ static int debug_addr_indirect(CPU * cpu, char * buffer, Instruction instruction
 
 static int debug_addr_indirect_indexed(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte offset = memory_read(cpu->mem, cpu->pc + 1);
-  byte addr_addr = offset + cpu->x;
-  uint16_t addr = memory_read16(cpu->mem, addr_addr);  // This should wrap around the zero page
+  byte addr_addr = memory_read(cpu->mem, cpu->pc + 1);
+  uint16_t offset = memory_zero_page_read16(cpu->mem, addr_addr);
+  uint16_t addr = offset + cpu->y;
   byte val = memory_read(cpu->mem, addr);
 
-  return sprintf(buffer, "%02X     %s ($%02X,X) @ %02X = %04X = %02X", offset, name, offset, addr_addr, addr, val);
+  return sprintf(buffer, "%02X     %s ($%02X),Y = %04X @ %04X = %02X", addr_addr, name, addr_addr, offset, addr, val);
 }
 
 static int debug_addr_indexed_indirect(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
   byte offset = memory_read(cpu->mem, cpu->pc + 1);
-  byte addr_addr = offset + cpu->y;
-  uint16_t addr = memory_read16(cpu->mem, addr_addr); // This should wrap around the zero page
+  byte addr_addr = offset + cpu->x;
+  uint16_t addr = memory_zero_page_read16(cpu->mem, addr_addr);
   byte val = memory_read(cpu->mem, addr);
 
-  return sprintf(buffer, "%02X     %s ($%02X,Y) @ %02X = %04X = %02X", offset, name, offset, addr_addr, addr, val);
+  return sprintf(buffer, "%02X     %s ($%02X,X) @ %02X = %04X = %02X", offset, name, offset, addr_addr, addr, val);
 }
 
 void cpu_debug_instr(CPU * cpu, char * buffer) {

@@ -16,6 +16,9 @@
 #define RAM_MAX 0x2000
 #define RAM_SIZE 0x0800
 
+#define ZERO_PAGE_MIN 0x0000
+#define ZERO_PAGE_MAX 0x0100
+
 #define STACK_MIN 0x0100
 #define STACK_MAX 0x0200
 
@@ -33,6 +36,7 @@ void memory_map_cartridge(Memory * mem, Cartridge * cartridge);
 
 byte memory_read(Memory * mem, uint16_t addr);
 uint16_t memory_read16(Memory * mem, uint16_t addr);
+uint16_t memory_zero_page_read16(Memory * mem, byte addr);
 void memory_write(Memory * mem, uint16_t addr, byte val);
 void memory_write16(Memory * mem, uint16_t addr, uint16_t val);
 
