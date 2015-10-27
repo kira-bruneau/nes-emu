@@ -825,10 +825,9 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
   char test[CPU_DEBUG_LENGTH + 1], debug[CPU_DEBUG_LENGTH];
   while (tolerance != 0 && fgets(test, ARRAY_LENGTH(test), fp) != NULL) {
     cpu_debug_instr(cpu, debug);
-    printf("%s\n", debug);
 
     if (strncmp(debug, test, CPU_DEBUG_LENGTH - 1) != 0) {
-      printf("\nTest Failed (line %i):\nExpected: %sObtained: %s\n", lineno, test, debug);
+      printf("Test Failed (line %i):\nExpected: %sObtained: %s\n", lineno, test, debug);
       if (--tolerance != 0) {
         printf("\n");
       }
