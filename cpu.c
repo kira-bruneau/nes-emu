@@ -14,6 +14,9 @@
  * NesDev: http://wiki.nesdev.com/w/index.php/CPU
  */
 
+// Mask of status bits that don't physically exist on the CPU
+#define CPU_STATUS_MASK 0x30
+
 struct CPU {
   Memory * mem;
 
@@ -24,14 +27,14 @@ struct CPU {
   union {
     byte status;
     struct {
-      byte c : 1;
-      byte z : 1;
-      byte i : 1;
-      byte d : 1;
-      byte b : 1; // undefined
-      byte e : 1; // undefined
-      byte v : 1;
-      byte n : 1;
+      byte c : 1; // carry
+      byte z : 1; // zero
+      byte i : 1; // interrupt disable
+      byte d : 1; // bcd enable (ignored)
+      byte b : 1; // break command (doesn't physically exist on cpu)
+      byte e : 1; // expansion bit (doesn't physically exist on cpu)
+      byte v : 1; // overflow
+      byte n : 1; // negative
     };
   };
 };
@@ -49,7 +52,8 @@ void cpu_reset(CPU * cpu) {
   cpu->a = 0;
   cpu->x = 0;
   cpu->y = 0;
-  cpu->status = 0x34;
+  cpu->status = CPU_STATUS_MASK;
+  cpu->i = 1;
 }
 
 // Obtain the next byte in memory and increment PC
@@ -395,7 +399,7 @@ void cpu_pha(CPU * cpu, Address addr) {
 }
 
 void cpu_php(CPU * cpu, Address addr) {
-  cpu_push(cpu, cpu->status | 0x30);
+  cpu_push(cpu, cpu->status | CPU_STATUS_MASK);
 }
 
 void cpu_pla(CPU * cpu, Address addr) {
@@ -405,7 +409,7 @@ void cpu_pla(CPU * cpu, Address addr) {
 }
 
 void cpu_plp(CPU * cpu, Address addr) {
-  cpu->status = (cpu_pull(cpu) & ~0x30) | (cpu->status & 0x30);
+  cpu->status = (cpu->status & CPU_STATUS_MASK) | (cpu_pull(cpu) & ~CPU_STATUS_MASK);
 }
 
 void cpu_rol(CPU * cpu, Address addr) {
@@ -609,7 +613,7 @@ void cpu_xaa(CPU * cpu, Address addr) {
 /**
  * Debugging
  */
-#define DEBUG_LINE_LENGTH 74
+#define CPU_DEBUG_LENGTH 74
 
 static int debug_addr_implied(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
@@ -737,7 +741,7 @@ bool cpu_debug_next(CPU * cpu, const char * buffer) {
   }
 
   while (num > 0) {
-    char debug[DEBUG_LINE_LENGTH];
+    char debug[CPU_DEBUG_LENGTH];
     cpu_debug_instr(cpu, debug);
     printf("%s\n", debug);
     cpu_next_instr(cpu);
@@ -780,15 +784,15 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
   FILE * fp = fopen("sub-nestest.log", "r");
 
   // Handle status register quirk for this test
-  cpu->status = 0x24;
+  cpu->b = 0;
 
   int lineno = 1;
-  char test[DEBUG_LINE_LENGTH + 1], debug[DEBUG_LINE_LENGTH];
+  char test[CPU_DEBUG_LENGTH + 1], debug[CPU_DEBUG_LENGTH];
   while (tolerance != 0 && fgets(test, ARRAY_LENGTH(test), fp) != NULL) {
     cpu_debug_instr(cpu, debug);
     printf("%s\n", debug);
 
-    if (strncmp(debug, test, DEBUG_LINE_LENGTH - 1) != 0) {
+    if (strncmp(debug, test, CPU_DEBUG_LENGTH - 1) != 0) {
       printf("\nTest Failed (line %i):\nExpected: %sObtained: %s\n", lineno, test, debug);
       if (--tolerance != 0) {
         printf("\n");
