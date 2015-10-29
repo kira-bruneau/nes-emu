@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "cpu.h"
 #include "opcode.h"
@@ -813,10 +814,14 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
     tolerance = 1;
   }
 
+  FILE * fp = fopen("test/sub-nestest.log", "r");
+  if (fp == NULL) {
+    fprintf(stderr, "Failed to load test: %s\n", strerror(errno));
+    return true;
+  }
+
   cpu_debug_reset(cpu, buffer);
   printf("\n");
-
-  FILE * fp = fopen("sub-nestest.log", "r");
 
   // Handle status register quirk for this test
   cpu->b = 0;
