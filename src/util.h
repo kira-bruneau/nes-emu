@@ -6,6 +6,6 @@
 
 #define ARRAY_LENGTH(x) (sizeof(x)/sizeof(*x))
 
-typedef unsigned char byte;
+typedef uint8_t byte;
 
 #endif

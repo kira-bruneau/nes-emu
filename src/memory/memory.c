@@ -4,6 +4,11 @@
 
 #include "memory.h"
 
+struct Memory {
+  byte * ram;
+  Cartridge * cartridge;
+};
+
 Memory * memory_new() {
   Memory * mem = g_malloc(sizeof(Memory));
   mem->ram = g_malloc0(RAM_SIZE);

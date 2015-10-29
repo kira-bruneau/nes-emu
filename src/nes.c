@@ -1,8 +1,8 @@
 #include <stdio.h>
 
 #include "nes.h"
-#include "memory.h"
-#include "cpu.h"
+#include "memory/memory.h"
+#include "cpu/cpu.h"
 
 struct NES {
   Memory * mem;

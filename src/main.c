@@ -2,8 +2,8 @@
 
 #include <stdlib.h>
 
-#include "events.h"
-#include "render.h"
+#include "ui/events.h"
+#include "ui/render.h"
 
 #define SCALE 4
 #define WINDOW_WIDTH 256 * SCALE

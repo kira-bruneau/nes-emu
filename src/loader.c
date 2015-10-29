@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "nes.h"
-#include "cartridge.h"
+#include "cartridge/cartridge.h"
 #include "util.h"
 
 /**

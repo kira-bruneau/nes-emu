@@ -1,7 +1,7 @@
 #ifndef NES_H
 #define NES_H
 
-#include "cartridge.h"
+#include "cartridge/cartridge.h"
 
 typedef struct NES NES;
 

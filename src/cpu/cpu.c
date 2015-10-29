@@ -4,9 +4,9 @@
 #include <stdlib.h>
 
 #include "cpu.h"
-#include "memory.h"
 #include "opcode.h"
-#include "util.h"
+#include "../memory/memory.h"
+#include "../util.h"
 
 /**
  * References:

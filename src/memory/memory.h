@@ -3,8 +3,8 @@
 
 #include <stddef.h>
 
-#include "cartridge.h"
-#include "util.h"
+#include "../cartridge/cartridge.h"
+#include "../util.h"
 
 /**
  * References:
@@ -25,10 +25,7 @@
 #define ROM_MIN 0x8000
 #define ROM_MAX 0xFFFF
 
-typedef struct Memory {
-  byte * ram;
-  Cartridge * cartridge;
-} Memory;
+typedef struct Memory Memory;
 
 Memory * memory_new();
 void memory_reset(Memory * mem);

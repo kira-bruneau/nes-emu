@@ -3,11 +3,23 @@ EXTERNAL_LIBS=glfw3 gl glib-2.0 gio-2.0
 CFLAGS += `pkg-config --cflags $(EXTERNAL_LIBS)`
 LDFLAGS += `pkg-config --libs $(EXTERNAL_LIBS)`
 
-main: main.c render.c events.c
+.PHONY: all
+all: main loader
+
+.PHONY: main
+main: bin/main
+
+bin/main: src/main.c src/ui/render.c src/ui/events.c
+	mkdir -p bin/
 	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
 
-loader: loader.c nes.c cpu.c memory.c cartridge.c
+.PHONY: loader
+loader: bin/loader
+
+bin/loader: src/loader.c src/nes.c src/cpu/cpu.c src/memory/memory.c src/cartridge/cartridge.c
+	mkdir -p bin/
 	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
 
+.PHONY: clean
 clean:
-	rm -rf main loader
+	rm -rf bin/
