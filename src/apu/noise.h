@@ -12,6 +12,7 @@ typedef struct {
   byte length_counter_load : 5;
 } Noise;
 
-float noise_output(Noise * noise);
+void noise_tick(Noise * noise);
+byte noise_output(Noise * noise);
 
 #endif

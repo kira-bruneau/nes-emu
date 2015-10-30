@@ -1,6 +1,11 @@
+#include <stdlib.h>
+
 #include "noise.h"
 
-float noise_output(Noise * noise) {
+void noise_tick(Noise * noise) {
   (void)noise;
-  return 0;
-};
+}
+
+byte noise_output(Noise * noise) {
+  return rand() % 16;
+}

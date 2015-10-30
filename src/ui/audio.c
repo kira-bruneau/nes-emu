@@ -8,7 +8,7 @@
 #include "../struct/buffer.h"
 
 #define SAMPLE_RATE 44100
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 44100
 
 struct Audio {
   PaStream * stream;
@@ -39,7 +39,9 @@ static int audio_callback(const void * input_buffer,
 
   unsigned long i;
   for (i = 0; i < frames_per_buffer; ++i, ++out) {
-    *out = 0.0f;
+    float val = 0.0f;
+    buffer_read(audio->buffer, &val, sizeof(float), 1);
+    *out = val;
   }
 
   g_mutex_unlock(&audio->io_mutex);
@@ -114,8 +116,6 @@ int audio_write(Audio * audio, float val) {
   if (audio->buffer == NULL) {
     return 0;
   }
-
-  buffer_print(audio->buffer);
 
   int result;
   g_mutex_lock(&audio->io_mutex);

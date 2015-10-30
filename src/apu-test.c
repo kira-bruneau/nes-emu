@@ -2,35 +2,46 @@
 #include <stdio.h>
 
 #include "ui/audio.h"
+
 #include "apu/triangle.h"
+#include "apu/pulse.h"
+#include "apu/noise.h"
+
+Pulse pulse = {
+  .timer = 12,
+  .timer_val = 0
+};
 
 Triangle triangle = {
-  .control_flag = true,
-  .counter_reload = 0,
-  .timer = 4,
-  .length_counter_load = 0,
-  .timer_val = 2047
+  .timer = 15,
+  .timer_val = 0
+};
+
+Noise noise = {
+
 };
 
 static void tick(Audio * audio) {
   triangle_tick(&triangle);
+  pulse_tick(&pulse);
+  noise_tick(&noise);
 
-  float output = (triangle_output(&triangle) - 8) / 8.0f;
-  printf("%f\n", output);
-  audio_write(audio, output);
+  byte output = triangle_output(&triangle);
+  audio_write(audio, output / 7.5f - 1.0f);
 }
 
 static void render(unsigned int fps, Audio * audio) {
-  if (fps > 1800000) {
+  if (fps == 0) {
+    fps = 1;
+  } else if (fps > 1800000) {
     fps = 1800000;
   }
-
 
   for (;;) {
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    int steps = 1/* 1800000 / fps */;
+    int steps = 1800000 / fps;
     while (steps-- > 0) {
       tick(audio);
     }
@@ -44,7 +55,7 @@ static void render(unsigned int fps, Audio * audio) {
 
     struct timespec sleep;
     sleep.tv_sec = 0;
-    sleep.tv_nsec = 1000000000 / 50 /* 1000000000 / fps - delta.tv_nsec */;
+    sleep.tv_nsec = 1000000000 / fps - delta.tv_nsec;
     nanosleep(&sleep, NULL);
   }
 }
@@ -52,7 +63,7 @@ static void render(unsigned int fps, Audio * audio) {
 int main(void) {
   Audio * audio = audio_create();
   audio_start(audio);
-  render(60, audio);
+  render(30, audio);
   audio_stop(audio);
   audio_destroy(audio);
   return 0;

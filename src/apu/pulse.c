@@ -1,6 +1,13 @@
 #include "pulse.h"
 
-float pulse_output(Pulse * pulse) {
-  (void)pulse;
-  return 0;
+void pulse_tick(Pulse * pulse) {
+  pulse->timer_val += pulse->timer;
+}
+
+byte pulse_output(Pulse * pulse) {
+  if (pulse->timer_val > 1024) {
+    return 16;
+  } else {
+    return 0;
+  }
 }

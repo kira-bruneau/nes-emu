@@ -16,8 +16,11 @@ typedef struct {
 
   uint16_t timer           : 11;
   byte length_counter_load : 5;
+
+  uint16_t timer_val       : 11;
 } Pulse;
 
-float pulse_output(Pulse * pulse);
+void pulse_tick(Pulse * pulse);
+byte pulse_output(Pulse * pulse);
 
 #endif
