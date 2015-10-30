@@ -68,9 +68,10 @@ size_t buffer_read(Buffer * buffer, void * out, size_t size, size_t nmemb) {
 void buffer_print(Buffer * buffer) {
   printf("%zu %zu %zu [", buffer->capacity, buffer->index, buffer->size);
 
-  unsigned char * data = (unsigned char *)(buffer + 1);
-  size_t start = buffer->index;
-  size_t end = (buffer->index + buffer->size) % buffer->capacity;
+  float * data = (float *)(buffer + 1);
+  size_t start = buffer->index / sizeof(float);
+  size_t end = ((buffer->index + buffer->size) % buffer->capacity) / sizeof(float);
+  size_t cap = buffer->capacity / sizeof(float);
   
   size_t i = 0;
   do {
@@ -84,11 +85,11 @@ void buffer_print(Buffer * buffer) {
       printf(" ");
     }
 
-    if (i++ >= buffer->capacity) {
+    if (i++ >= cap) {
       break;
     }
     
-    printf("%02X", *data++);
+    printf("%f", *data++);
   } while (1);
   
   printf("]\n");

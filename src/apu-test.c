@@ -1,67 +1,59 @@
-#include <stdlib.h>
+#include <time.h>
 #include <stdio.h>
-#include <portaudio.h>
 
+#include "ui/audio.h"
 #include "apu/triangle.h"
 
-#define SAMPLE_RATE 44100
+Triangle triangle = {
+  .control_flag = true,
+  .counter_reload = 0,
+  .timer = 4,
+  .length_counter_load = 0,
+  .timer_val = 2047
+};
 
-static int audio_callback(const void * input_buffer,
-                          void * output_buffer,
-                          unsigned long frames_per_buffer,
-                          const PaStreamCallbackTimeInfo * time_info,
-                          PaStreamCallbackFlags status_flags,
-                          void * user_data) {
-  (void)input_buffer;
-  (void)time_info;
-  (void)status_flags;
+static void tick(Audio * audio) {
+  triangle_tick(&triangle);
 
-  Triangle * triangle = (Triangle *)user_data;
-  float * out = (float *)output_buffer;
+  float output = (triangle_output(&triangle) - 8) / 8.0f;
+  printf("%f\n", output);
+  audio_write(audio, output);
+}
 
-  unsigned int i;
-  for (i = 0; i < frames_per_buffer; i++) {
-    *out++ = triangle_output(triangle);
+static void render(unsigned int fps, Audio * audio) {
+  if (fps > 1800000) {
+    fps = 1800000;
   }
 
-  return 0;
+
+  for (;;) {
+    struct timespec start;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
+    int steps = 1/* 1800000 / fps */;
+    while (steps-- > 0) {
+      tick(audio);
+    }
+
+    struct timespec end;
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    struct timespec delta;
+    delta.tv_sec = start.tv_sec - end.tv_sec;
+    delta.tv_nsec = start.tv_nsec - end.tv_nsec;
+
+    struct timespec sleep;
+    sleep.tv_sec = 0;
+    sleep.tv_nsec = 1000000000 / 50 /* 1000000000 / fps - delta.tv_nsec */;
+    nanosleep(&sleep, NULL);
+  }
 }
 
 int main(void) {
-  PaError err = Pa_Initialize();
-  if (err != paNoError) goto error;
-
-  Triangle triangle;
-
-  PaStream * stream;
-  err = Pa_OpenDefaultStream(&stream,
-                             0, // input channels (none)
-                             1, // output channels (mono)
-                             paFloat32,
-                             SAMPLE_RATE,
-                             paFramesPerBufferUnspecified,
-                             audio_callback,
-                             &triangle);
-
-  if (err != paNoError) goto error;
-
-  err = Pa_StartStream(stream);
-  if (err != paNoError) goto error;
-
-  Pa_Sleep(100000);
-
-  err = Pa_StopStream(stream);
-  if (err != paNoError) goto error;
-
-  err = Pa_CloseStream(stream);
-  if (err != paNoError) goto error;
-
-  err = Pa_Terminate();
-  if (err != paNoError) goto error;
-
+  Audio * audio = audio_create();
+  audio_start(audio);
+  render(60, audio);
+  audio_stop(audio);
+  audio_destroy(audio);
   return 0;
-
- error:
-  fprintf(stderr, "PortAudio error: %s\n", Pa_GetErrorText(err));
-  return 1;
 }

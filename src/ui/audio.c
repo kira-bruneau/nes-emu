@@ -115,6 +115,8 @@ int audio_write(Audio * audio, float val) {
     return 0;
   }
 
+  buffer_print(audio->buffer);
+
   int result;
   g_mutex_lock(&audio->io_mutex);
   result = buffer_write(audio->buffer, &val, sizeof(float), 1);

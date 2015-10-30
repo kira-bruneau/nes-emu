@@ -4,12 +4,15 @@
 #include "../util.h"
 
 typedef struct {
-  bool envelope_loop       : 1;
-  byte linear_counter_load : 7;
+  bool control_flag        : 1;
+  byte counter_reload      : 7;
   uint16_t timer           : 11;
   byte length_counter_load : 5;
+
+  uint16_t timer_val     : 11;
 } Triangle;
 
-float triangle_output(Triangle * triangle);
+void triangle_tick(Triangle * triangle);
+byte triangle_output(Triangle * triangle);
 
 #endif
