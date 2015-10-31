@@ -7,6 +7,8 @@
 #include "apu/pulse.h"
 #include "apu/noise.h"
 
+#define CPU_FREQUENCY 1789773 // Hz
+
 Pulse pulse = {
   .timer = 12,
   .timer_val = 0
@@ -33,15 +35,15 @@ static void tick(Audio * audio) {
 static void render(unsigned int fps, Audio * audio) {
   if (fps == 0) {
     fps = 1;
-  } else if (fps > 1800000) {
-    fps = 1800000;
+  } else if (fps > CPU_FREQUENCY) {
+    fps = CPU_FREQUENCY;
   }
 
   for (;;) {
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    int steps = 1800000 / fps;
+    int steps = SAMPLE_RATE / fps;
     while (steps-- > 0) {
       tick(audio);
     }
@@ -50,12 +52,12 @@ static void render(unsigned int fps, Audio * audio) {
     clock_gettime(CLOCK_MONOTONIC, &end);
 
     struct timespec delta;
-    delta.tv_sec = start.tv_sec - end.tv_sec;
-    delta.tv_nsec = start.tv_nsec - end.tv_nsec;
+    delta.tv_sec = end.tv_sec - start.tv_sec;
+    delta.tv_nsec = end.tv_nsec - start.tv_nsec;
 
     struct timespec sleep;
-    sleep.tv_sec = 0;
-    sleep.tv_nsec = 1000000000 / fps - delta.tv_nsec;
+    sleep.tv_sec = 0 - delta.tv_sec;
+    sleep.tv_nsec = 1000000000 / fps - delta.tv_nsec - 100000;
     nanosleep(&sleep, NULL);
   }
 }

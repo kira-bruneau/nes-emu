@@ -6,7 +6,7 @@ void pulse_tick(Pulse * pulse) {
 
 byte pulse_output(Pulse * pulse) {
   if (pulse->timer_val > 1024) {
-    return 16;
+    return 15;
   } else {
     return 0;
   }
