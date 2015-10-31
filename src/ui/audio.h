@@ -1,6 +1,8 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#define SAMPLE_RATE 44100 // Hz
+
 typedef struct Audio Audio;
 
 Audio * audio_create(void);

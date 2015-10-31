@@ -2,18 +2,15 @@
 #include <string.h>
 
 #include <portaudio.h>
-#include <glib.h>
 
 #include "audio.h"
 #include "../struct/buffer.h"
 
-#define SAMPLE_RATE 44100
-#define BUFFER_SIZE 44100
+#define BUFFER_SIZE 1024
 
 struct Audio {
   PaStream * stream;
   Buffer * buffer;
-  GMutex io_mutex;
 };
 
 static int audio_callback(const void * input_buffer,
@@ -30,22 +27,12 @@ static int audio_callback(const void * input_buffer,
   float * out = (float *)output_buffer;
   Audio * audio = (Audio *)user_data;
 
-  if (audio->buffer == NULL) {
-    memset(out, 0.0f, frames_per_buffer * sizeof(float));
-    return 0;
+  int num_read = 0;
+  if (audio->buffer != NULL) {
+    num_read = buffer_read(audio->buffer, out, frames_per_buffer);
   }
 
-  g_mutex_lock(&audio->io_mutex);
-
-  unsigned long i;
-  for (i = 0; i < frames_per_buffer; ++i, ++out) {
-    float val = 0.0f;
-    buffer_read(audio->buffer, &val, sizeof(float), 1);
-    *out = val;
-  }
-
-  g_mutex_unlock(&audio->io_mutex);
-
+  memset(out, 0, sizeof(float) * (frames_per_buffer - num_read));
   return 0;
 }
 
@@ -91,8 +78,7 @@ int audio_start(Audio * audio) {
 
   PaError err = Pa_StartStream(audio->stream);
   if (err == paNoError) {
-    g_mutex_init(&audio->io_mutex);
-    audio->buffer = buffer_create(BUFFER_SIZE);
+    audio->buffer = buffer_create(sizeof(float), BUFFER_SIZE);
     return audio->buffer != NULL;
   }
 
@@ -105,7 +91,6 @@ int audio_stop(Audio * audio) {
   }
 
   PaError err = Pa_StopStream(audio->stream);
-  g_mutex_clear(&audio->io_mutex);
   free(audio->buffer);
   audio->buffer = NULL;
 
@@ -117,10 +102,5 @@ int audio_write(Audio * audio, float val) {
     return 0;
   }
 
-  int result;
-  g_mutex_lock(&audio->io_mutex);
-  result = buffer_write(audio->buffer, &val, sizeof(float), 1);
-  g_mutex_unlock(&audio->io_mutex);
-
-  return result;
+  return buffer_write(audio->buffer, &val, 1);
 }
