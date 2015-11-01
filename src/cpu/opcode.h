@@ -3,7 +3,7 @@
 
 #include "instruction.h"
 #include "addressing-mode.h"
-#include "../util.h"
+#include "util.h"
 
 const byte opcode_instruction[] = {
   INSTR_BRK , INSTR_ORA , INSTR_STP , INSTR_SLO ,
