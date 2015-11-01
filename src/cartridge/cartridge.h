@@ -3,7 +3,7 @@
 
 #include <gio/gio.h>
 
-#include "../util.h"
+#include "util.h"
 
 typedef enum Mirror {
   MIRROR_HORIZONTAL,

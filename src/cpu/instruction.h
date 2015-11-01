@@ -2,7 +2,7 @@
 #define INSTRUCTION_H
 
 #include "cpu.h"
-#include "../util.h"
+#include "util.h"
 
 typedef enum Instruction {
   INSTR_ADC , INSTR_AHX , INSTR_ALR , INSTR_ANC ,
