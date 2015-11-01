@@ -1,11 +1,8 @@
-EXTERNAL_LIBS=glfw3 gl glib-2.0 gio-2.0 portaudio-2.0
+CFLAGS += -g -I./src
 
-CFLAGS += '-g'
-
-CFLAGS += '-I./src'
-
-CFLAGS += `pkg-config --cflags $(EXTERNAL_LIBS)`
-LDFLAGS += `pkg-config --libs $(EXTERNAL_LIBS)`
+EXTERNAL_LIBS = glfw3 gl glib-2.0 gio-2.0 portaudio-2.0
+CFLAGS += $(shell pkg-config --cflags $(EXTERNAL_LIBS))
+LDFLAGS += $(shell pkg-config --libs $(EXTERNAL_LIBS))
 
 .PHONY: all
 all: main loader apu-test
