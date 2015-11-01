@@ -6,7 +6,7 @@
 #include "noise.h"
 #include "dmc.h"
 
-#include "../util.h"
+#include "util.h"
 
 typedef struct {
   Pulse pulse1;

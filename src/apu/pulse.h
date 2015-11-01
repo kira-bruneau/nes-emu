@@ -1,7 +1,7 @@
 #ifndef PULSE_H
 #define PULSE_H
 
-#include "../util.h"
+#include "util.h"
 
 typedef struct {
   byte duty                : 2;

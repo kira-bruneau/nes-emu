@@ -1,7 +1,7 @@
 #ifndef DMC_H
 #define DMC_H
 
-#include "../util.h"
+#include "util.h"
 
 typedef struct {
   bool irq_enable          : 1;

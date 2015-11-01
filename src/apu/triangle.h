@@ -1,7 +1,7 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
-#include "../util.h"
+#include "util.h"
 
 typedef struct {
   bool control_flag        : 1;

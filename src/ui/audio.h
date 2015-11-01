@@ -1,7 +1,7 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include "../apu/apu.h"
+#include "apu/apu.h"
 
 typedef struct Audio Audio;
 

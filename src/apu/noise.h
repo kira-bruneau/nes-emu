@@ -1,7 +1,7 @@
 #ifndef NOISE_H
 #define NOISE_H
 
-#include "../util.h"
+#include "util.h"
 
 typedef struct {
   bool envelope_loop       : 1;
