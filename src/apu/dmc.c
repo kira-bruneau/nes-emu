@@ -1,6 +1,10 @@
 #include "dmc.h"
 
-float dmc_output(DMC * dmc) {
+void dmc_tick(DMC * dmc) {
+  (void)dmc;
+}
+
+byte dmc_sample(DMC * dmc) {
   (void)dmc;
   return 0;
 };

@@ -21,6 +21,6 @@ typedef struct {
 } Pulse;
 
 void pulse_tick(Pulse * pulse);
-byte pulse_output(Pulse * pulse);
+byte pulse_sample(Pulse * pulse);
 
 #endif

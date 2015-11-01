@@ -14,6 +14,7 @@ typedef struct {
   byte sample_length       : 8;
 } DMC;
 
-float dmc_output(DMC * dmc);
+void dmc_tick(DMC * dmc);
+byte dmc_sample(DMC * dmc);
 
 #endif

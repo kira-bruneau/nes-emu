@@ -13,6 +13,6 @@ typedef struct {
 } Triangle;
 
 void triangle_tick(Triangle * triangle);
-byte triangle_output(Triangle * triangle);
+byte triangle_sample(Triangle * triangle);
 
 #endif

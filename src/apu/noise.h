@@ -13,6 +13,6 @@ typedef struct {
 } Noise;
 
 void noise_tick(Noise * noise);
-byte noise_output(Noise * noise);
+byte noise_sample(Noise * noise);
 
 #endif

@@ -3,36 +3,11 @@
 
 #include "ui/audio.h"
 
-#include "apu/triangle.h"
-#include "apu/pulse.h"
-#include "apu/noise.h"
+#define MASTER_FREQUENCY 21477272 // Hz
+#define CLOCK_DIVISOR 12
+#define CPU_FREQUENCY MASTER_FREQUENCY / CLOCK_DIVISOR
 
-#define CPU_FREQUENCY 1789773 // Hz
-
-Pulse pulse = {
-  .timer = 12,
-  .timer_val = 0
-};
-
-Triangle triangle = {
-  .timer = 15,
-  .timer_val = 0
-};
-
-Noise noise = {
-
-};
-
-static void tick(Audio * audio) {
-  triangle_tick(&triangle);
-  pulse_tick(&pulse);
-  noise_tick(&noise);
-
-  byte output = triangle_output(&triangle);
-  audio_write(audio, output / 7.5f - 1.0f);
-}
-
-static void render(unsigned int fps, Audio * audio) {
+static void render(unsigned int fps, APU * apu) {
   if (fps == 0) {
     fps = 1;
   } else if (fps > CPU_FREQUENCY) {
@@ -43,9 +18,9 @@ static void render(unsigned int fps, Audio * audio) {
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    int steps = SAMPLE_RATE / fps;
+    int steps = CPU_FREQUENCY / 2 / fps;
     while (steps-- > 0) {
-      tick(audio);
+      apu_tick(apu);
     }
 
     struct timespec end;
@@ -63,10 +38,23 @@ static void render(unsigned int fps, Audio * audio) {
 }
 
 int main(void) {
-  Audio * audio = audio_create();
+  APU apu;
+  apu_init(&apu);
+
+  Audio * audio = audio_create(&apu);
+  if (audio == NULL) {
+    return 1;
+  }
+
   audio_start(audio);
-  render(30, audio);
-  audio_stop(audio);
+
+  for (;;) {
+    struct timespec sleep;
+    sleep.tv_sec = 1;
+    sleep.tv_nsec = 0;
+    nanosleep(&sleep, NULL);
+  }
+
   audio_destroy(audio);
   return 0;
 }

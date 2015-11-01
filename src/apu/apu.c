@@ -1,50 +1,73 @@
+#include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "apu.h"
 
-static float apu_pulse1(APU * apu) {
+void apu_init(APU * apu) {
+  memset(apu, 0, sizeof(APU));
+
+  apu->status.pulse1 = 1;
+  apu->pulse1.timer = 20;
+  /* apu->status.triangle = 1; */
+  /* apu->triangle.timer = 1000; */
+}
+
+void apu_tick(APU * apu) {
+  pulse_tick(&apu->pulse1);
+  pulse_tick(&apu->pulse2);
+  triangle_tick(&apu->triangle);
+  noise_tick(&apu->noise);
+  dmc_tick(&apu->dmc);
+}
+
+static byte apu_sample_pulse1(APU * apu) {
   if (!apu->status.pulse1) {
     return 0;
   }
 
-  return pulse_output(&apu->pulse1);
+  return pulse_sample(&apu->pulse1);
 }
 
-static float apu_pulse2(APU * apu) {
+static byte apu_sample_pulse2(APU * apu) {
   if (!apu->status.pulse2) {
     return 0;
   }
 
-  return pulse_output(&apu->pulse1);
+  return pulse_sample(&apu->pulse1);
 }
 
-static float apu_triangle(APU * apu) {
+static byte apu_sample_triangle(APU * apu) {
   if (!apu->status.triangle) {
     return 0;
   }
 
-  return triangle_output(&apu->triangle);
+  return triangle_sample(&apu->triangle);
 }
 
-static float apu_noise(APU * apu) {
+static byte apu_sample_noise(APU * apu) {
   if (!apu->status.noise) {
     return 0;
   }
 
-  return noise_output(&apu->noise);
+  return noise_sample(&apu->noise);
 }
 
-static float apu_dmc(APU * apu) {
+static byte apu_sample_dmc(APU * apu) {
   if (!apu->status.dmc) {
     return 0;
   }
 
-  return dmc_output(&apu->dmc);
+  return dmc_sample(&apu->dmc);
 }
 
-float apu_output(APU * apu) {
-  float pulse_out = 0.00752 * (apu_pulse1(apu) + apu_pulse2(apu));
-  float tnd_out = 0.00851 * apu_triangle(apu) + 0.00494 * apu_noise(apu) + 0.00335 * apu_dmc(apu);
+float apu_sample(APU * apu) {
+  float pulse1 = apu_sample_pulse1(apu);
+  float pulse2 = apu_sample_pulse2(apu);
+  float triangle = apu_sample_triangle(apu);
+  float noise = apu_sample_noise(apu);
+  float dmc = apu_sample_dmc(apu);
+
+  float pulse_out = 0.00752 * (pulse1 + pulse2);
+  float tnd_out = 0.00851 * triangle + 0.00494 * noise + 0.00335 * dmc;
   return pulse_out + tnd_out;
 }

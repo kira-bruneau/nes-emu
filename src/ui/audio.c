@@ -1,16 +1,16 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <portaudio.h>
 
 #include "audio.h"
-#include "../struct/buffer.h"
 
-#define BUFFER_SIZE 1024
+#define SAMPLE_RATE 44100 // Hz
 
 struct Audio {
+  APU * apu;
   PaStream * stream;
-  Buffer * buffer;
 };
 
 static int audio_callback(const void * input_buffer,
@@ -27,80 +27,67 @@ static int audio_callback(const void * input_buffer,
   float * out = (float *)output_buffer;
   Audio * audio = (Audio *)user_data;
 
-  int num_read = 0;
-  if (audio->buffer != NULL) {
-    num_read = buffer_read(audio->buffer, out, frames_per_buffer);
+  size_t i;
+  for (i = 0; i < frames_per_buffer; ++i, ++out) {
+    apu_tick(audio->apu);
+    *out = apu_sample(audio->apu);
   }
 
-  memset(out, 0, sizeof(float) * (frames_per_buffer - num_read));
   return 0;
 }
 
-Audio * audio_create(void) {
+Audio * audio_create(APU * apu) {
   PaError err;
+
   err = Pa_Initialize();
-  if (err != paNoError) {
-    return NULL;
+  if (err == paNoError) {
+    PaDeviceIndex device = Pa_GetDefaultOutputDevice();
+    if (device != paNoDevice) {
+      const PaDeviceInfo * device_info = Pa_GetDeviceInfo(device);
+
+      PaStreamParameters output_parameters = {
+        .channelCount = 1,
+        .device = device,
+        .hostApiSpecificStreamInfo = NULL,
+        .sampleFormat = paFloat32,
+        .suggestedLatency = device_info->defaultLowOutputLatency
+      };
+
+      Audio * audio = malloc(sizeof(Audio));
+      audio->apu = apu;
+
+      err = Pa_OpenStream(&audio->stream,
+                          NULL,
+                          &output_parameters,
+                          SAMPLE_RATE,
+                          paFramesPerBufferUnspecified,
+                          paNoFlag,
+                          audio_callback,
+                          audio);
+
+      if (err == paNoError) {
+        return audio;
+      }
+
+      free(audio);
+    }
+
+    Pa_Terminate();
   }
 
-  Audio * audio = malloc(sizeof(Audio));
-  audio->stream = NULL;
-  audio->buffer = NULL;
-
-  err = Pa_OpenDefaultStream(&audio->stream,
-                             0, // input channels (none)
-                             1, // output channels (mono)
-                             paFloat32,
-                             SAMPLE_RATE,
-                             paFramesPerBufferUnspecified,
-                             audio_callback,
-                             audio);
-
-  if (err != paNoError) {
-    audio_destroy(audio);
-    return NULL;
-  }
-
-  return audio;
+  return NULL;
 }
 
 void audio_destroy(Audio * audio) {
-  audio_stop(audio);
   Pa_CloseStream(audio->stream);
   Pa_Terminate();
   free(audio);
 }
 
 int audio_start(Audio * audio) {
-  if (audio->buffer != NULL) {
-    return 0;
-  }
-
-  PaError err = Pa_StartStream(audio->stream);
-  if (err == paNoError) {
-    audio->buffer = buffer_create(sizeof(float), BUFFER_SIZE);
-    return audio->buffer != NULL;
-  }
-
-  return 0;
+  return Pa_StartStream(audio->stream) == paNoError;
 }
 
 int audio_stop(Audio * audio) {
-  if (audio->buffer == NULL) {
-    return 0;
-  }
-
-  PaError err = Pa_StopStream(audio->stream);
-  free(audio->buffer);
-  audio->buffer = NULL;
-
-  return err == paNoError;
-}
-
-int audio_write(Audio * audio, float val) {
-  if (audio->buffer == NULL) {
-    return 0;
-  }
-
-  return buffer_write(audio->buffer, &val, 1);
+  return Pa_StopStream(audio->stream) == paNoError;
 }

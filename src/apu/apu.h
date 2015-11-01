@@ -31,6 +31,8 @@ typedef struct {
   } frame_counter;
 } APU;
 
-float apu_output(APU * apu);
+void apu_init(APU * apu);
+void apu_tick(APU * apu);
+float apu_sample(APU * apu);
 
 #endif
