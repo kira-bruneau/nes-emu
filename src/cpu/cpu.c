@@ -346,6 +346,14 @@ void cpu_jmp(CPU * cpu, Address addr) {
     addr.val = 0x0300;
   }
 
+  /*
+     The 6502 had at least one hardware bug, with indirect jumps.
+     JMP (<addr>) would not work correctly if <addr> was of the form $xxFF.
+     When reading two bytes from the specified address, it would not carry the FF->00
+     overflow into the xx. For example, it would read $10FF and $1000 instead of $10FF
+     and $1100.
+  */
+
   cpu->pc = addr.val;
 }
 
