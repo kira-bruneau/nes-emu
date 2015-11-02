@@ -16,8 +16,8 @@ typedef struct {
   DMC dmc;
 
   struct {
-    bool dmc_interrupt   : 1;
-    bool frame_interrupt : 1;
+    bool dmc_interrupt   : 1; // read-only
+    bool frame_interrupt : 1; // read-only
     bool dmc             : 1;
     bool noise           : 1;
     bool triangle        : 1;
@@ -27,7 +27,9 @@ typedef struct {
 
   struct {
     bool mode        : 1;
-    bool irq_disable : 1;
+    bool irq_disable : 1; // 60hz interrupt
+    // divider: CPU / 2
+    // looping clock sequencer: keeps track of total APU cycles
   } frame_counter;
 } APU;
 

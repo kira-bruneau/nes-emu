@@ -7,12 +7,13 @@ void apu_init(APU * apu) {
   memset(apu, 0, sizeof(APU));
 
   apu->status.pulse1 = 1;
-  apu->pulse1.timer = 20;
+  apu->pulse1.timer = 1;
   /* apu->status.triangle = 1; */
   /* apu->triangle.timer = 1000; */
 }
 
 void apu_tick(APU * apu) {
+  // Two different modes: apu->frame_counter.mode
   pulse_tick(&apu->pulse1);
   pulse_tick(&apu->pulse2);
   triangle_tick(&apu->triangle);

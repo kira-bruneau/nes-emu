@@ -5,12 +5,13 @@
 #include <portaudio.h>
 
 #include "audio.h"
+#include "vendor/pa_ringbuffer.h"
 
-#define SAMPLE_RATE 44100 // Hz
+#define BUFFER_SIZE 65536
 
 struct Audio {
-  APU * apu;
   PaStream * stream;
+  PaUtilRingBuffer buffer;
 };
 
 static int audio_callback(const void * input_buffer,
@@ -27,16 +28,12 @@ static int audio_callback(const void * input_buffer,
   float * out = (float *)output_buffer;
   Audio * audio = (Audio *)user_data;
 
-  size_t i;
-  for (i = 0; i < frames_per_buffer; ++i, ++out) {
-    apu_tick(audio->apu);
-    *out = apu_sample(audio->apu);
-  }
-
+  size_t num_read = PaUtil_ReadRingBuffer(&audio->buffer, out, frames_per_buffer);
+  memset(out + num_read, 0, sizeof(float) * (frames_per_buffer - num_read));
   return 0;
 }
 
-Audio * audio_create(APU * apu) {
+Audio * audio_create() {
   PaError err;
 
   err = Pa_Initialize();
@@ -53,23 +50,28 @@ Audio * audio_create(APU * apu) {
         .suggestedLatency = device_info->defaultLowOutputLatency
       };
 
-      Audio * audio = malloc(sizeof(Audio));
-      audio->apu = apu;
+      Audio * audio = malloc(sizeof(Audio) + sizeof(float) * BUFFER_SIZE);
+      void * data = audio + 1;
 
-      err = Pa_OpenStream(&audio->stream,
-                          NULL,
-                          &output_parameters,
-                          SAMPLE_RATE,
-                          paFramesPerBufferUnspecified,
-                          paNoFlag,
-                          audio_callback,
-                          audio);
+      if (audio != NULL) {
+        int res = PaUtil_InitializeRingBuffer(&audio->buffer, sizeof(float), BUFFER_SIZE, data);
+        printf("%i\n", res);
 
-      if (err == paNoError) {
-        return audio;
+        err = Pa_OpenStream(&audio->stream,
+                            NULL,
+                            &output_parameters,
+                            SAMPLE_RATE,
+                            paFramesPerBufferUnspecified,
+                            paNoFlag,
+                            audio_callback,
+                            audio);
+
+        if (err == paNoError) {
+          return audio;
+        }
+
+        free(audio);
       }
-
-      free(audio);
     }
 
     Pa_Terminate();
@@ -90,4 +92,8 @@ int audio_start(Audio * audio) {
 
 int audio_stop(Audio * audio) {
   return Pa_StopStream(audio->stream) == paNoError;
+}
+
+size_t audio_write(Audio * audio, float val) {
+  return PaUtil_WriteRingBuffer(&audio->buffer, &val, 1);
 }
