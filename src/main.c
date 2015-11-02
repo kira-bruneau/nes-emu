@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 
+#include "apu/apu.h"
+#include "ui/audio.h"
 #include "ui/events.h"
 #include "ui/render.h"
 

@@ -7,7 +7,7 @@
 #include "audio.h"
 #include "vendor/pa_ringbuffer.h"
 
-#define BUFFER_SIZE 65536
+#define BUFFER_SIZE 1024
 
 struct Audio {
   PaStream * stream;

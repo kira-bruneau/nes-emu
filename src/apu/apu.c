@@ -7,7 +7,7 @@ void apu_init(APU * apu) {
   memset(apu, 0, sizeof(APU));
 
   apu->status.pulse1 = 1;
-  apu->pulse1.timer = 1;
+  apu->pulse1.timer = 10;
   /* apu->status.triangle = 1; */
   /* apu->triangle.timer = 1000; */
 }
