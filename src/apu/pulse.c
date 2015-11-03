@@ -5,20 +5,33 @@
  * http://wiki.nesdev.com/w/index.php/APU_Pulse
  */
 
+static byte sequencer[4][8] = {
+  {0, 1, 0, 0, 0, 0, 0, 0},
+  {0, 1, 1, 0, 0, 0, 0, 0},
+  {0, 1, 1, 1, 1, 0, 0, 0},
+  {1, 0, 0, 1, 1, 1, 1, 1}
+};
+
 byte pulse_sample(Pulse * pulse) {
+  // TODO: Figure out how sweep effects the timer and gate
+
   if (pulse->length_counter_halt != 1 && pulse->length_counter_val == 0) {
     return 0;
   }
 
-  // TODO: Output should depend on duty value
-  if (pulse->timer_val > 1024) {
-    return 15;
-  } else {
+  if (sequencer[pulse->duty][pulse->sequence_val] == 0) {
     return 0;
   }
+
+  return pulse->envelope;
 }
 
 void pulse_timer_tick(Pulse * pulse) {
+  if (pulse->timer_val == 0) {
+    pulse->sequence_val += 1;
+    pulse->timer_val = pulse->timer;
+  }
+
   pulse->timer_val -= 1;
 }
 

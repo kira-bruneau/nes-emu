@@ -19,6 +19,7 @@ typedef struct {
 
   // Internal variables
   uint16_t timer_val       : 11;
+  uint16_t sequence_val    : 3;
   byte length_counter_val  : 5;
 } Pulse;
 
