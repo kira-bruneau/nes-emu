@@ -57,7 +57,7 @@ Audio * audio_create(APU * apu) {
         .device = device,
         .hostApiSpecificStreamInfo = NULL,
         .sampleFormat = paFloat32,
-        .suggestedLatency = device_info->defaultLowOutputLatency
+        .suggestedLatency = device_info->defaultHighOutputLatency
       };
 
       Audio * audio = malloc(sizeof(Audio));
