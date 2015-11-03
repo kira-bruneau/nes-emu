@@ -11,8 +11,9 @@
 
 /**
  * References:
- * Manual: http://users.telenet.be/kim1-6502/6502/proman.html
- * NesDev: http://wiki.nesdev.com/w/index.php/CPU
+ * CPU Wiki: http://wiki.nesdev.com/w/index.php/CPU
+ * CPU Manual: http://users.telenet.be/kim1-6502/6502/proman.html
+ * Opcodes: http://www.6502.org/tutorials/6502opcodes.html
  */
 
 // Mask of status bits that don't physically exist on the CPU
@@ -20,6 +21,9 @@
 
 struct CPU {
   Memory * mem;
+
+  int clock;
+  uint16_t last_addr;
 
   uint16_t pc;
   byte sp;
@@ -43,6 +47,7 @@ struct CPU {
 CPU * cpu_new(Memory * mem) {
   CPU * cpu = g_malloc(sizeof(CPU));
   cpu->mem = mem;
+  cpu->clock = 0;
   cpu_reset(cpu);
   return cpu;
 }
@@ -69,6 +74,10 @@ uint16_t cpu_next_memory16(CPU * cpu) {
   uint16_t addr = memory_read16(cpu->mem, cpu->pc);
   cpu->pc += 2;
   return addr;
+}
+
+static bool page_cross(uint16_t orig_addr, uint16_t new_addr) {
+  return (orig_addr & 0xFF00) != (new_addr & 0xFF00);
 }
 
 // Evaluate the next instruction in the program
@@ -122,6 +131,9 @@ void cpu_next_instr(CPU * cpu) {
   }
 
   instruction_action[instruction](cpu, addr);
+  cpu->clock += opcode_cycles[opcode];
+
+  // TODO: Detect page crosses
 }
 
 /*
@@ -774,7 +786,14 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
   sprintf(buffer + i, "%*c", i - 48, ' ');
   i = 48;
 
-  i += sprintf(buffer + i, "A:%02X X:%02X Y:%02X P:%02X SP:%02X", cpu->a, cpu->x, cpu->y, cpu->status, cpu->sp);
+  // 3 PPU dots (Y'CbCr) per CPU cycle, wraps when scanline finishes (after 341 dots)
+  int ppu_cycle = (cpu->clock * 3) % 341;
+
+  i += sprintf(buffer + i,
+               "A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%3d",
+               cpu->a, cpu->x, cpu->y, cpu->status, cpu->sp, ppu_cycle);
+
+  // TODO: Mising SL - the scanline, I don't fully understand it
 }
 
 bool cpu_debug_next(CPU * cpu, const char * buffer) {
