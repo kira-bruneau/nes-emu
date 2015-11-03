@@ -13,6 +13,14 @@
 #define PPU_FREQUENCY MASTER_FREQUENCY / 4.0f
 #define APU_FREQUENCY MASTER_FREQUENCY / 24.0f
 
+/**
+ * Calculates the number of cycles that occur in a scaled
+ * frequency given the clock of the original frequency
+ *
+ * Notes:
+ *  - The integer part of the ratio must fit into an int
+ *  - May lose accuracy if or when the clock overflows
+ */
 int frequency_scale(float ratio, int clock);
 
 #endif

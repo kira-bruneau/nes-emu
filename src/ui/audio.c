@@ -12,6 +12,7 @@
 struct Audio {
   PaStream * stream;
   APU * apu;
+  int sample_clock;
 };
 
 static int audio_callback(const void * input_buffer,
@@ -30,8 +31,13 @@ static int audio_callback(const void * input_buffer,
 
   unsigned long i = 0;
   for (i = 0; i < frames_per_buffer; ++i) {
-    apu_tick(audio->apu);
+    int apu_cycles = frequency_scale(APU_FREQUENCY / SAMPLE_RATE, audio->sample_clock);
+    while (apu_cycles-- != 0) {
+      apu_tick(audio->apu);
+    }
+
     out[i] = apu_sample(audio->apu);
+    audio->sample_clock += 1;
   }
 
   return 0;
