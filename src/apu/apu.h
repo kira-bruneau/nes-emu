@@ -28,8 +28,9 @@ typedef struct {
   struct {
     bool mode        : 1;
     bool irq_disable : 1; // 60hz interrupt
-    // divider: CPU / 2
-    // looping clock sequencer: keeps track of total APU cycles
+
+    // Internal variables
+    uint16_t clock;
   } frame_counter;
 } APU;
 

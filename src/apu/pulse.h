@@ -5,9 +5,9 @@
 
 typedef struct {
   byte duty                : 2;
-  bool envelope_loop       : 1;
+  bool length_counter_halt : 1;
   bool constant_volume     : 1;
-  byte volume              : 4;
+  byte envelope            : 4;
 
   bool sweep_unit          : 1;
   byte period              : 3;
@@ -15,12 +15,16 @@ typedef struct {
   byte shift               : 3;
 
   uint16_t timer           : 11;
-  byte length_counter_load : 5;
+  byte length_counter      : 5;
 
+  // Internal variables
   uint16_t timer_val       : 11;
+  byte length_counter_val  : 5;
 } Pulse;
 
-void pulse_tick(Pulse * pulse);
 byte pulse_sample(Pulse * pulse);
+void pulse_tick(Pulse * pulse);
+void pulse_write(Pulse * pulse, byte addr, byte val);
+byte pulse_read(Pulse * pulse, byte addr);
 
 #endif

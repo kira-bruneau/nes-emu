@@ -14,7 +14,9 @@ typedef struct {
   byte sample_length       : 8;
 } DMC;
 
-void dmc_tick(DMC * dmc);
 byte dmc_sample(DMC * dmc);
+void dmc_tick(DMC * dmc);
+void dmc_write(DMC * dmc, byte addr, byte val);
+byte dmc_read(DMC * dmc, byte addr);
 
 #endif

@@ -19,6 +19,11 @@ void render_init(GLFWwindow * w) {
   window = w;
 
   apu_init(&apu);
+
+  // APU Tests
+  apu.status.pulse1 = 1;
+  apu.pulse1.length_counter_halt = 1;
+
   audio = audio_create(&apu);
   audio_start(audio);
 

@@ -4,15 +4,20 @@
 #include "util.h"
 
 typedef struct {
-  bool control_flag        : 1;
-  byte counter_reload      : 7;
-  uint16_t timer           : 11;
-  byte length_counter_load : 5;
+  bool control_flag       : 1;
+  byte counter_reload     : 7;
+  uint16_t timer          : 11;
+  byte length_counter     : 5;
 
-  uint16_t timer_val     : 11;
+  // Internal variables
+  uint16_t timer_val      : 11;
+  byte length_counter_val : 5;
+  byte linear_counter_val : 5;
 } Triangle;
 
-void triangle_tick(Triangle * triangle);
 byte triangle_sample(Triangle * triangle);
+void triangle_tick(Triangle * triangle);
+void triangle_write(Triangle * triangle, byte addr, byte val);
+byte triangle_read(Triangle * triangle, byte addr);
 
 #endif
