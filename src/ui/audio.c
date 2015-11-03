@@ -5,6 +5,7 @@
 #include <portaudio.h>
 
 #include "audio.h"
+#include "clock.h"
 
 #define SAMPLE_RATE 44100
 
