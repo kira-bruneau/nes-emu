@@ -10,19 +10,18 @@
 
 GLFWwindow * window;
 
-APU apu;
 Audio * audio;
+APU apu;
 
-double last_second;
-int cycle_count;
-int sample_count;
 int render_clock;
+int cycle_count;
+double last_second;
 
 void render_init(GLFWwindow * w) {
   window = w;
 
   apu_init(&apu);
-  audio = audio_create();
+  audio = audio_create(&apu);
   audio_start(audio);
 
   last_second = 0.0f;
@@ -41,36 +40,20 @@ static int frequency_scale(float ratio, int clock) {
   return result;
 }
 
-static void render_audio() {
-  // Assume render loop is clocked at 60Hz (for now)
+void render_loop() {
   double now = glfwGetTime();
 
   if (now - 1.0f >= last_second) {
-    printf("%f (%i): %i, %i\n", now, render_clock, cycle_count, sample_count);
-    cycle_count = sample_count = 0;
+    printf("%f (%i): %i, %i\n", now, render_clock, cycle_count);
+    cycle_count = 0;
     last_second = now;
   }
 
-  int num_cycles = frequency_scale(CPU_FREQUENCY / FRAME_RATE, render_clock);
-  while (num_cycles-- != 0) {
+  int cpu_cycles = frequency_scale(CPU_FREQUENCY / FRAME_RATE, render_clock);
+  while (cpu_cycles-- != 0) {
     cycle_count += 1;
   }
 
-  int num_samples = SAMPLE_RATE / FRAME_RATE;
-  if (render_clock % (FRAME_RATE / 20) == 0) {
-    ++num_samples;
-  }
-
-  while (num_samples-- != 0) {
-    apu_tick(&apu);
-    audio_write(audio, apu_sample(&apu));
-    sample_count += 1;
-  }
-
-  render_clock += 1;
-}
-
-static void render_video() {
   int width, height;
   glfwGetFramebufferSize(window, &width, &height);
 
@@ -85,9 +68,6 @@ static void render_video() {
   glVertex2f(0.5f, 0.5f); // The top right corner
   glVertex2f(0.5f, -0.5f); // The bottom right corner
   glEnd();
-}
 
-void render_loop() {
-  render_audio();
-  render_video();
+  render_clock += 1;
 }
