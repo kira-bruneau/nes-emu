@@ -18,11 +18,22 @@ byte pulse_sample(Pulse * pulse) {
   }
 }
 
-void pulse_tick(Pulse * pulse) {
+void pulse_timer_tick(Pulse * pulse) {
   pulse->timer_val -= 1;
+}
+
+void pulse_length_counter_tick(Pulse * pulse) {
   if (pulse->length_counter_halt != 1 && pulse->length_counter_val != 0) {
     pulse->length_counter_val -= 1;
   }
+}
+
+void pulse_sweep_tick(Pulse * pulse) {
+  (void)pulse;
+}
+
+void pulse_envelope_tick(Pulse * pulse) {
+  (void)pulse;
 }
 
 void pulse_write(Pulse * pulse, byte addr, byte val) {

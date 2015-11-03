@@ -18,13 +18,18 @@ byte triangle_sample(Triangle * triangle) {
   return abs((triangle->timer_val - 1024) / 64);
 }
 
-void triangle_tick(Triangle * triangle) {
-  // Note: triangle timer ticks at same frequency as the CPU (2*APU)
-  triangle->timer_val -= 2;
+void triangle_timer_tick(Triangle * triangle) {
+  triangle->timer_val -= 1;
+}
 
+void triangle_length_counter_tick(Triangle * triangle) {
   if (triangle->control_flag != 0 && triangle->length_counter_val != 0) {
     triangle->length_counter_val -= 1;
   }
+}
+
+void triangle_linear_counter_tick(Triangle * triangle) {
+  (void)triangle;
 }
 
 void triangle_write(Triangle * triangle, byte addr, byte val) {

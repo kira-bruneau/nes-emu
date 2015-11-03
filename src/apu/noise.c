@@ -16,10 +16,18 @@ byte noise_sample(Noise * noise) {
   return rand() % 16;
 }
 
-void noise_tick(Noise * noise) {
+void noise_timer_tick(Noise * noise) {
+  noise->timer_val -= 1;
+}
+
+void noise_length_counter_tick(Noise * noise) {
   if (noise->length_counter_halt != 1 && noise->length_counter_val != 0) {
     noise->length_counter_val -= 1;
   }
+}
+
+void noise_envelope_tick(Noise * noise) {
+  (void)noise;
 }
 
 void noise_write(Noise * noise, byte addr, byte val) {

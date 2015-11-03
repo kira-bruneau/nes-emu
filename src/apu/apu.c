@@ -28,17 +28,26 @@ float apu_sample(APU * apu) {
 }
 
 void apu_tick(APU * apu) {
+  pulse_timer_tick(&apu->pulse1);
+  pulse_timer_tick(&apu->pulse2);
+
+  // Tick twice since triangle timer ticks at 2 * APU (CPU)
+  triangle_timer_tick(&apu->triangle);
+  triangle_timer_tick(&apu->triangle);
+
+  noise_timer_tick(&apu->noise);
+
   if (apu->frame_counter.mode == 0) {
-    // TODO
+    // TODO:
+    apu->frame_counter.clock += 1;
+    if (apu->frame_counter.clock == 14915) {
+      apu->frame_counter.clock = 0;
+    }
   } else {
-    // TODO
+    // TODO:
+    apu->frame_counter.clock += 1;
+    if (apu->frame_counter.clock == 18641) {
+      apu->frame_counter.clock = 0;
+    }
   }
-
-  pulse_tick(&apu->pulse1);
-  pulse_tick(&apu->pulse2);
-  triangle_tick(&apu->triangle);
-  noise_tick(&apu->noise);
-  dmc_tick(&apu->dmc);
-
-  apu->frame_counter.clock += 1;
 }
