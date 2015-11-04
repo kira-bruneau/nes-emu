@@ -5,11 +5,12 @@
  * http://wiki.nesdev.com/w/index.php/APU_Pulse
  */
 
+// NOTE: Sequence counter on actual hardware counts down, but this counts up
 static byte sequencer[4][8] = {
-  {0, 1, 0, 0, 0, 0, 0, 0},
-  {0, 1, 1, 0, 0, 0, 0, 0},
-  {0, 1, 1, 1, 1, 0, 0, 0},
-  {1, 0, 0, 1, 1, 1, 1, 1}
+  {0, 0, 0, 0, 0, 0, 0, 1},
+  {0, 0, 0, 0, 0, 0, 1, 1},
+  {0, 0, 0, 0, 1, 1, 1, 1},
+  {1, 1, 1, 1, 1, 1, 0, 0}
 };
 
 byte pulse_sample(Pulse * pulse) {
@@ -30,9 +31,9 @@ void pulse_timer_tick(Pulse * pulse) {
   if (pulse->timer_val == 0) {
     pulse->sequence_val += 1;
     pulse->timer_val = pulse->timer;
+  } else {
+    pulse->timer_val -= 1;
   }
-
-  pulse->timer_val -= 1;
 }
 
 void pulse_length_counter_tick(Pulse * pulse) {

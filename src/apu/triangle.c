@@ -26,9 +26,9 @@ void triangle_timer_tick(Triangle * triangle) {
   if (triangle->timer_val == 0) {
     triangle->sequence_val += 1;
     triangle->timer_val = triangle->timer;
+  } else {
+    triangle->timer_val -= 1;
   }
-
-  triangle->timer_val -= 1;
 }
 
 void triangle_length_counter_tick(Triangle * triangle) {
