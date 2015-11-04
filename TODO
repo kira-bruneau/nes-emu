@@ -1,0 +1,35 @@
+http://nesdev.com/NESDoc.pdf
+
+APU:
+  - Implement frame counter: when to tick what
+  - Implement pulse: envelope (constant_volume, volume_val), sweep (sweep unit, period, negate, shift)
+  - Implement triangle: linear counter (control_flag, control_reload, length_counter)
+  - Implement noise: envelope (constant_volume, volume_val, loop), shift register
+  - Implement proper mixing using table lookup
+
+  - Figure out detune problem that occurs every so often
+    - Wavelength is increased, so check the timings in the audio_callback
+
+  - High frequency sounds don't sound right because APU frequency is not divisble by 44100Hz
+    - Pulse, Noise & DMC, where t > 48 should in theory sound fine (nyquist-shannon)
+    - Triangle, where t > 24 should in theory sound fine (nyquist-shannon)
+    - But for some reason the audio still sounds off at higher values of t
+
+  - Implement memory interface
+
+CPU:
+  - Review and refactor: add/sub, shifts, jsr/rts, php, plp
+  - Modify status register to use bitwise operations instead of bitfield
+    - The order of bits in bitfield does not have a standard definition
+  - Handle page crossing for calculating # of cycles
+  - Handle CPU bug
+
+Memory mapping (p.11):
+  - Handle I/O registers ($2000-$4020)
+    - $2008-$4000 are mirrors of $2000-$2007
+  - Expansion ROM ($4020-$6000)
+  - SRAM ($6000-$6000)
+  - PRG_ROM ($8000-$10000)
+    - Possibly rename prg_rom_size to prg_rom_banks
+    - prg_rom_size > 2: must use a memory mapper to determine which 16kb banks to load into memory
+    - Handle interrupt vectors from $FFFA-$FFFF
