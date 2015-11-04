@@ -12,7 +12,7 @@ typedef struct {
   byte length_counter      : 5;
 
   // Internal variables
-  uint16_t timer_val       : 11;
+  uint16_t timer_val       : 12; // Must hold values up to 4068
   byte length_counter_val  : 5;
 } Noise;
 
