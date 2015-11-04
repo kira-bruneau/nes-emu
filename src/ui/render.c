@@ -11,20 +11,15 @@
 GLFWwindow * window;
 
 Audio * audio;
-APU apu;
+APU * apu;
 
 int render_clock;
 
 void render_init(GLFWwindow * w) {
   window = w;
 
-  apu_init(&apu);
-
-  // APU Tests
-  apu.status.pulse1 = 1;
-  apu.pulse1.length_counter_halt = 1;
-
-  audio = audio_create(&apu);
+  apu = apu_create();
+  audio = audio_create(apu);
   audio_start(audio);
 
   render_clock = 0;

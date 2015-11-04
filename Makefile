@@ -10,7 +10,7 @@ all: main loader
 .PHONY: main
 main: bin/main
 
-bin/main: src/main.c src/ui/audio.c src/ui/render.c src/ui/events.c src/clock.c src/apu/apu.c src/apu/pulse.c src/apu/triangle.c src/apu/noise.c src/apu/dmc.c
+bin/main: src/main.c src/ui/audio.c src/ui/render.c src/ui/events.c src/clock.c src/apu/apu.c
 	mkdir -p bin/
 	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
 

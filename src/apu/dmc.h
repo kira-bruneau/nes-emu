@@ -3,16 +3,7 @@
 
 #include "util.h"
 
-typedef struct {
-  bool irq_enable          : 1;
-  bool loop                : 1;
-  byte frequency           : 4;
-
-  byte loader_counter      : 7;
-
-  byte sample_address      : 8;
-  byte sample_length       : 8;
-} DMC;
+typedef struct DMC DMC;
 
 byte dmc_sample(DMC * dmc);
 void dmc_tick(DMC * dmc);

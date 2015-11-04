@@ -3,18 +3,7 @@
 
 #include "util.h"
 
-typedef struct {
-  bool control_flag       : 1;
-  byte counter_reload     : 7;
-  uint16_t timer          : 11;
-  byte length_counter     : 5;
-
-  // Internal variables
-  uint16_t timer_val      : 11;
-  uint16_t sequence_val   : 5;
-  byte length_counter_val : 5;
-  byte linear_counter_val : 5;
-} Triangle;
+typedef struct Triangle Triangle;
 
 byte triangle_sample(Triangle * triangle);
 void triangle_timer_tick(Triangle * triangle);

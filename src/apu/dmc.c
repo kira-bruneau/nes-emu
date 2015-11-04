@@ -5,6 +5,17 @@
  * http://wiki.nesdev.com/w/index.php/APU_DMC
  */
 
+struct DMC {
+  bool irq_enable          : 1;
+  bool loop                : 1;
+  byte frequency           : 4;
+
+  byte loader_counter      : 7;
+
+  byte sample_address      : 8;
+  byte sample_length       : 8;
+};
+
 byte dmc_sample(DMC * dmc) {
   (void)dmc;
   return 0;

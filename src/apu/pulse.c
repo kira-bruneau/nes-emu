@@ -5,8 +5,28 @@
  * http://wiki.nesdev.com/w/index.php/APU_Pulse
  */
 
+struct Pulse {
+  byte duty                : 2;
+  bool length_counter_halt : 1;
+  bool constant_volume     : 1;
+  byte envelope            : 4;
+
+  bool sweep_unit          : 1;
+  byte period              : 3;
+  bool negate              : 1;
+  byte shift               : 3;
+
+  uint16_t timer           : 11;
+  byte length_counter      : 5;
+
+  // Internal variables
+  uint16_t timer_val       : 11;
+  uint16_t sequence_val    : 3;
+  byte length_counter_val  : 5;
+};
+
 // NOTE: Sequence counter on actual hardware counts down, but this counts up
-static byte sequencer[4][8] = {
+static byte pulse_sequencer[4][8] = {
   {0, 0, 0, 0, 0, 0, 0, 1},
   {0, 0, 0, 0, 0, 0, 1, 1},
   {0, 0, 0, 0, 1, 1, 1, 1},
@@ -20,7 +40,7 @@ byte pulse_sample(Pulse * pulse) {
     return 0;
   }
 
-  if (sequencer[pulse->duty][pulse->sequence_val] == 0) {
+  if (pulse_sequencer[pulse->duty][pulse->sequence_val] == 0) {
     return 0;
   }
 

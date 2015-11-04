@@ -7,7 +7,20 @@
  * http://wiki.nesdev.com/w/index.php/APU_Triangle
  */
 
-static byte sequencer[32] = {
+struct Triangle {
+  bool control_flag       : 1;
+  byte counter_reload     : 7;
+  uint16_t timer          : 11;
+  byte length_counter     : 5;
+
+  // Internal variables
+  uint16_t timer_val      : 11;
+  uint16_t sequence_val   : 5;
+  byte length_counter_val : 5;
+  byte linear_counter_val : 5;
+};
+
+static byte triangle_sequencer[32] = {
   15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
@@ -19,7 +32,7 @@ byte triangle_sample(Triangle * triangle) {
     return 0;
   }
 
-  return sequencer[triangle->sequence_val];
+  return triangle_sequencer[triangle->sequence_val];
 }
 
 void triangle_timer_tick(Triangle * triangle) {

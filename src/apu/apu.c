@@ -1,7 +1,15 @@
+#include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "apu.h"
+
+// APU has tight coupling with sub components
+// I could put all this code in apu.c,
+// but I prefer to keep the seperation
+#include "pulse.c"
+#include "triangle.c"
+#include "noise.c"
+#include "dmc.c"
 
 /**
  * References:
@@ -10,9 +18,56 @@
  * Mixer: http://wiki.nesdev.com/w/index.php/APU_Mixer
  */
 
-void apu_init(APU * apu) {
+struct APU {
+  Pulse pulse1;
+  Pulse pulse2;
+  Triangle triangle;
+  Noise noise;
+  DMC dmc;
+
+  struct {
+    bool dmc_interrupt   : 1; // read-only
+    bool frame_interrupt : 1; // read-only
+    bool dmc             : 1;
+    bool noise           : 1;
+    bool triangle        : 1;
+    bool pulse2          : 1;
+    bool pulse1          : 1;
+  } status;
+
+  struct {
+    bool mode        : 1;
+    bool irq_disable : 1; // 60hz interrupt
+
+    // Internal variables
+    uint16_t clock;
+  } frame_counter;
+};
+
+APU * apu_create() {
   // Set everything to zero for now
-  memset(apu, 0, sizeof(APU));
+  APU * apu = calloc(1, sizeof(APU));
+
+  // APU Tests
+  apu->status.pulse1 = 1;
+  apu->pulse1.envelope = 15;
+  apu->pulse1.duty = 1;
+  apu->pulse1.timer = 200;
+  apu->pulse1.timer_val = apu->pulse1.timer;
+  apu->pulse1.sequence_val = 0;
+  apu->pulse1.length_counter_halt = 1;
+
+  /* apu->status.triangle = 1; */
+  /* apu->triangle.timer = 200; */
+  /* apu->triangle.timer_val = apu->triangle.timer; */
+  /* apu->triangle.sequence_val = 0; */
+  /* apu->triangle.control_flag = 0; */
+
+  return apu;
+}
+
+void apu_destroy(APU * apu) {
+  free(apu);
 }
 
 float apu_sample(APU * apu) {
