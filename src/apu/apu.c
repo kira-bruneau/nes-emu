@@ -37,10 +37,11 @@ struct APU {
 
   struct {
     bool mode        : 1;
-    bool irq_disable : 1; // 60hz interrupt
+    bool irq_inhibit : 1;
 
     // Internal variables
-    uint16_t clock;
+    bool interrupt   : 1;
+    uint16_t clock   : 15; // Must hold up to 18640
   } frame_counter;
 };
 
@@ -82,7 +83,7 @@ float apu_sample(APU * apu) {
   return pulse_out + tnd_out;
 }
 
-void apu_tick(APU * apu) {
+static void apu_timers_tick(APU * apu) {
   pulse_timer_tick(&apu->pulse1);
   pulse_timer_tick(&apu->pulse2);
 
@@ -91,18 +92,68 @@ void apu_tick(APU * apu) {
   triangle_timer_tick(&apu->triangle);
 
   noise_timer_tick(&apu->noise);
+}
 
+static void apu_half_frame_tick(APU * apu) {
+  pulse_sweep_tick(&apu->pulse1);
+  pulse_sweep_tick(&apu->pulse2);
+  pulse_length_counter_tick(&apu->pulse1);
+  pulse_length_counter_tick(&apu->pulse2);
+  triangle_length_counter_tick(&apu->triangle);
+  noise_length_counter_tick(&apu->noise);
+}
+
+static void apu_quarter_frame_tick(APU * apu) {
+  pulse_envelope_tick(&apu->pulse1);
+  pulse_envelope_tick(&apu->pulse2);
+  triangle_linear_counter_tick(&apu->triangle);
+  noise_envelope_tick(&apu->noise);
+}
+
+/*
+ * Waveform subunits are ticked at half APU intervals.
+ * I assume this is to ensure ordering between timer ticks
+ * and subunit ticks.
+ *
+ * Since I rounded down the clock values for the steps, the
+ * frame counter must be ticked after the timers.
+ */
+static void apu_frame_counter_tick(APU * apu) {
   if (apu->frame_counter.mode == 0) {
-    // TODO:
-    apu->frame_counter.clock += 1;
-    if (apu->frame_counter.clock == 14915) {
-      apu->frame_counter.clock = 0;
+    switch (apu->frame_counter.clock) {
+    case 14914:
+      // TODO: Set IRQ
+    case 7456:
+      apu_half_frame_tick(apu);
+    case 11185:
+    case 3728:
+      apu_quarter_frame_tick(apu);
+    default:
+      if (apu->frame_counter.clock == 14914) {
+        apu->frame_counter.clock = 0;
+      } else {
+        apu->frame_counter.clock += 1;
+      }
     }
   } else {
-    // TODO:
-    apu->frame_counter.clock += 1;
-    if (apu->frame_counter.clock == 18641) {
-      apu->frame_counter.clock = 0;
+    switch (apu->frame_counter.clock) {
+    case 18640:
+    case 7456:
+      apu_half_frame_tick(apu);
+    case 11185:
+    case 3728:
+      apu_quarter_frame_tick(apu);
+    default:
+      if (apu->frame_counter.clock == 18640) {
+        apu->frame_counter.clock = 0;
+      } else {
+        apu->frame_counter.clock += 1;
+      }
     }
   }
+}
+
+void apu_tick(APU * apu) {
+  apu_timers_tick(apu);
+  apu_frame_counter_tick(apu);
 }
