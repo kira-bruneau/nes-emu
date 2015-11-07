@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "apu.h"
 
@@ -61,6 +62,8 @@ APU * apu_create() {
   apu->status.noise = 1;
   noise_init(&apu->noise);
 
+  apu_test_io(apu);
+
   return apu;
 }
 
@@ -110,7 +113,7 @@ static void apu_quarter_frame_tick(APU * apu) {
 /*
  * Waveform subunits are ticked at half APU intervals.
  * I assume this is to ensure ordering between period ticks
- * and the other ticks.
+ * and frame counter ticks.
  *
  * Since I rounded down the clock values for the steps, the
  * frame counter must be ticked after the period.
@@ -206,17 +209,77 @@ byte apu_read(APU * apu, byte addr) {
     val = dmc_read(&apu->dmc, addr - 16);
     break;
   case 20:
-    val |= apu->status.dmc = (val & 1) << 4;
-    val |= apu->status.noise = (val & 1) << 3;
-    val |= apu->status.triangle = (val & 1) << 2;
-    val |= apu->status.pulse1 = (val & 1) << 1;
-    val |= apu->status.pulse2 = (val & 1) << 0;
+    val |= (apu->status.dmc & 1) << 4;
+    val |= (apu->status.noise & 1) << 3;
+    val |= (apu->status.triangle & 1) << 2;
+    val |= (apu->status.pulse1 & 1) << 1;
+    val |= (apu->status.pulse2 & 1) << 0;
     break;
   case 21:
-    val |= apu->frame_counter.mode = (val & 1) << 7;
-    val |= apu->frame_counter.irq_inhibit = (val & 1) << 6;
+    val |= (apu->frame_counter.mode & 1) << 7;
+    val |= (apu->frame_counter.irq_inhibit & 1) << 6;
     break;
   }
 
   return val;
+}
+
+/**
+ * Exaustive test to ensure that each write
+ * correlates with the expected read
+ */
+int apu_test_io(APU * apu) {
+  for (int addr = 0; addr <= 21; ++addr) {
+    for (int val = 0; val <= 255; ++val) {
+      int compare = val;
+      apu_write(apu, addr, val);
+
+      // When envelope is on, assume volume = 0
+      if ((addr == 0 || addr == 4 || addr == 12) && !(compare & 0b00010000)) {
+        compare &= 0b11110000;
+      }
+
+      // Unused addresses, any write should give read = 0
+      if (addr == 9 || addr == 13) {
+        compare = 0;
+      }
+
+      // Partially unused, any write to upper 2 bits = 0
+      if (addr == 12) {
+        compare &= 0b00111111;
+      }
+
+      // Partially unused
+      if (addr == 14) {
+        compare &= 0b10001111;
+      }
+
+      // Partially unused
+      if (addr == 15) {
+        compare &= 0b11111000;
+      }
+
+      // DMC not implemented, assume 0 for now
+      if (addr >= 16 && addr <= 19) {
+        compare = 0;
+      }
+
+      // Partially unused (DMC interrupt & frame interrupt not implemented yet)
+      if (addr == 20) {
+        compare &= 0b00011111;
+      }
+
+      // Partially unused
+      if (addr == 21) {
+        compare &= 0b11000000;
+      }
+
+      if (apu_read(apu, addr) != compare) {
+        fprintf(stderr, "APU I/O test failed at addr: %i, val:%i\n", addr , val);
+        return 0;
+      }
+    }
+  }
+
+  return 1;
 }
