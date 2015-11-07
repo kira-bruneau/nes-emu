@@ -60,12 +60,13 @@ static byte cpu_read_status(CPU * cpu) {
 CPU * cpu_new(Memory * mem) {
   CPU * cpu = g_malloc(sizeof(CPU));
   cpu->mem = mem;
-  cpu->clock = 0;
   cpu_reset(cpu);
   return cpu;
 }
 
 void cpu_reset(CPU * cpu) {
+  cpu->clock = 0;
+
   cpu->pc = 0xC000;
   cpu->sp = 0xFD;
   cpu->a = 0;
