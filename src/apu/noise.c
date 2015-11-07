@@ -97,6 +97,7 @@ void noise_write(Noise * noise, byte addr, byte val) {
     break;
   case 3:
     noise->length = val >> 3 & 31;
+    noise->length_timer = length_table[noise->length];
     break;
   }
 }
