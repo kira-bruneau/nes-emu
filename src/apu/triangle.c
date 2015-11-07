@@ -78,7 +78,7 @@ void triangle_write(Triangle * triangle, byte addr, byte val) {
     break;
   case 3:
     triangle->length = (val >> 3) & 31;
-    triangle->period = (val & 7) << 8 | (triangle->period & 0x0F);
+    triangle->period = (val & 0x07) << 8 | (triangle->period & 0x0F);
     triangle->length_timer = length_table[triangle->length];
     triangle->phase = 0;
     break;
@@ -86,7 +86,21 @@ void triangle_write(Triangle * triangle, byte addr, byte val) {
 }
 
 byte triangle_read(Triangle * triangle, byte addr) {
-  (void)triangle;
-  (void)addr;
+  byte val = 0;
+
+  switch (addr) {
+  case 0:
+    val |= (triangle->control_flag & 1) << 7;
+    val |= (triangle->counter_reload & 127) << 0;
+    break;
+  case 2:
+    val |= triangle->period & 0x0F;
+    break;
+  case 3:
+    val |= (triangle->length & 31) << 3;
+    val |= (triangle->period & 0x70) >> 8;
+    break;
+  }
+
   return 0;
 }
