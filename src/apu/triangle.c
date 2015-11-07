@@ -41,16 +41,16 @@ byte triangle_sample(Triangle * triangle) {
 
 void triangle_period_tick(Triangle * triangle) {
   if (triangle->period_timer == 0) {
-    triangle->phase += 1;
+    triangle->phase++;
     triangle->period_timer = triangle->period;
   } else {
-    triangle->period_timer -= 1;
+    triangle->period_timer--;
   }
 }
 
 void triangle_length_tick(Triangle * triangle) {
   if (triangle->control_flag != 0 && triangle->length_timer != 0) {
-    triangle->length_timer -= 1;
+    triangle->length_timer--;
   }
 }
 

@@ -63,13 +63,13 @@ void noise_period_tick(Noise * noise) {
     noise_shift(noise);
     noise->period_timer = noise_timer_periods[noise->period];
   } else {
-    noise->period_timer -= 1;
+    noise->period_timer--;
   }
 }
 
 void noise_length_tick(Noise * noise) {
   if (noise->loop != 1 && noise->length_timer != 0) {
-    noise->length_timer -= 1;
+    noise->length_timer--;
   }
 }
 

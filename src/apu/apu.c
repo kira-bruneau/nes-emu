@@ -129,7 +129,7 @@ static void apu_frame_counter_tick(APU * apu) {
       if (apu->frame_counter.clock == 14914) {
         apu->frame_counter.clock = 0;
       } else {
-        apu->frame_counter.clock += 1;
+        apu->frame_counter.clock++;
       }
     }
   } else {
@@ -144,7 +144,7 @@ static void apu_frame_counter_tick(APU * apu) {
       if (apu->frame_counter.clock == 18640) {
         apu->frame_counter.clock = 0;
       } else {
-        apu->frame_counter.clock += 1;
+        apu->frame_counter.clock++;
       }
     }
   }

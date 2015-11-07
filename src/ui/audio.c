@@ -38,7 +38,7 @@ static int audio_callback(const void * input_buffer,
       apu_tick(audio->apu);
     }
 
-    audio->sample_clock += 1;
+    audio->sample_clock++;
   }
 
   return 0;

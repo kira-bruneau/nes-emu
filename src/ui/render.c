@@ -46,5 +46,5 @@ void render_loop() {
   glVertex2f(0.5f, -0.5f); // The bottom right corner
   glEnd();
 
-  render_clock += 1;
+  render_clock++;
 }
