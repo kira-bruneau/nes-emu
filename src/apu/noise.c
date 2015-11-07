@@ -8,16 +8,21 @@
  */
 
 struct Noise {
-  bool length_counter_halt : 1;
-  bool constant_volume     : 1;
-  byte envelope            : 4;
   bool loop                : 1;
+  bool envelope_disabled   : 1;
+  byte volume              : 4;
+  bool mode                : 1;
   byte period              : 4;
-  byte length_counter      : 5;
+  byte length              : 5;
 
   // Internal variables
-  uint16_t timer_val       : 12; // Must hold up to 4068
-  byte length_counter_val  : 5;
+  bool envelope_reload     : 1;
+  byte envelope_val        : 4;
+
+  uint16_t shift_register  : 15;
+
+  uint16_t period_timer    : 12; // Must hold up to 4068
+  byte length_timer        : 5;
 };
 
 static uint16_t noise_timer_periods[16] = {
@@ -25,31 +30,55 @@ static uint16_t noise_timer_periods[16] = {
 };
 
 byte noise_sample(Noise * noise) {
-  if (noise->length_counter_halt != 1 && noise->length_counter_val == 0) {
+  if (!noise->loop && noise->length_timer == 0) {
     return 0;
   }
 
-  // TODO: This should use the original pseudo random algorithm
-  return rand() % 16;
+  if (noise->shift_register & 1) {
+    return 0;
+  }
+
+  if (noise->envelope_disabled) {
+    return noise->volume;
+  } else {
+    return noise->envelope_val;
+  }
+}
+
+static void noise_shift(Noise * noise) {
+  byte other_bit = noise->mode ?
+    (noise->shift_register >> 1 & 1) :
+    (noise->shift_register >> 6 & 1);
+
+  byte feedback = (noise->shift_register & 1) ^ other_bit;
+  noise->shift_register >>= 1;
+  noise->shift_register |= feedback << 14;
 }
 
 void noise_timer_tick(Noise * noise) {
-  if (noise->timer_val == 0) {
-    // TODO: Clock shift register
-    noise->timer_val = noise_timer_periods[noise->period];
+  if (noise->period_timer == 0) {
+    noise_shift(noise);
+    noise->period_timer = noise_timer_periods[noise->period];
   } else {
-    noise->timer_val -= 1;
+    noise->period_timer -= 1;
   }
 }
 
 void noise_length_counter_tick(Noise * noise) {
-  if (noise->length_counter_halt != 1 && noise->length_counter_val != 0) {
-    noise->length_counter_val -= 1;
+  if (noise->loop != 1 && noise->length_timer != 0) {
+    noise->length_timer -= 1;
   }
 }
 
 void noise_envelope_tick(Noise * noise) {
-  (void)noise;
+  if (noise->envelope_reload) {
+    noise->envelope_val = 15;
+    noise->envelope_reload = false;
+  } else if (noise->envelope_val != 0) {
+    noise->envelope_val--;
+  } else if (noise->loop) {
+    noise->envelope_val = 15;
+  }
 }
 
 void noise_write(Noise * noise, byte addr, byte val) {
