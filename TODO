@@ -12,8 +12,6 @@ APU:
 
 CPU:
   - Review and refactor: add/sub, shifts, jsr/rts, php, plp
-  - Modify status register to use bitwise operations instead of bitfield
-    - The order of bits in bitfield does not have a standard definition
   - Handle page crossing for calculating # of cycles
   - Handle CPU bug
 

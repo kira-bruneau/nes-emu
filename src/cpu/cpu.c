@@ -15,9 +15,6 @@
  * Opcodes: http://www.6502.org/tutorials/6502opcodes.html
  */
 
-// Mask of status bits that don't physically exist on the CPU
-#define CPU_STATUS_MASK 0x30
-
 struct CPU {
   Memory * mem;
 
@@ -28,20 +25,37 @@ struct CPU {
   byte sp;
   byte a, x, y;
 
-  union {
-    byte status;
-    struct {
-      byte c : 1; // carry
-      byte z : 1; // zero
-      byte i : 1; // interrupt disable
-      byte d : 1; // bcd enable (ignored)
-      byte b : 1; // break command (doesn't physically exist on cpu)
-      byte e : 1; // expansion bit (doesn't physically exist on cpu)
-      byte v : 1; // overflow
-      byte n : 1; // negative
-    };
+  struct {
+    byte c : 1; // carry
+    byte z : 1; // zero
+    byte i : 1; // interrupt disable
+    byte d : 1; // bcd enable (ignored)
+    byte v : 1; // overflow
+    byte n : 1; // negative
   };
 };
+
+static void cpu_write_status(CPU * cpu, byte val) {
+  cpu->c = val >> 0;
+  cpu->z = val >> 1;
+  cpu->i = val >> 2;
+  cpu->d = val >> 3;
+  cpu->v = val >> 6;
+  cpu->n = val >> 7;
+}
+
+static byte cpu_read_status(CPU * cpu) {
+  byte val = 0x00;
+  val |= cpu->c << 0;
+  val |= cpu->z << 1;
+  val |= cpu->i << 2;
+  val |= cpu->d << 3;
+  val |= 1 << 4;
+  val |= 1 << 5;
+  val |= cpu->v << 6;
+  val |= cpu->n << 7;
+  return val;
+}
 
 CPU * cpu_new(Memory * mem) {
   CPU * cpu = g_malloc(sizeof(CPU));
@@ -57,7 +71,8 @@ void cpu_reset(CPU * cpu) {
   cpu->a = 0;
   cpu->x = 0;
   cpu->y = 0;
-  cpu->status = CPU_STATUS_MASK;
+
+  cpu_write_status(cpu, 0);
   cpu->i = 1;
 }
 
@@ -424,7 +439,7 @@ void cpu_pha(CPU * cpu, Address addr) {
 }
 
 void cpu_php(CPU * cpu, Address addr) {
-  cpu_push(cpu, cpu->status | CPU_STATUS_MASK);
+  cpu_push(cpu, cpu_read_status(cpu));
 }
 
 void cpu_pla(CPU * cpu, Address addr) {
@@ -434,7 +449,7 @@ void cpu_pla(CPU * cpu, Address addr) {
 }
 
 void cpu_plp(CPU * cpu, Address addr) {
-  cpu->status = (cpu->status & CPU_STATUS_MASK) | (cpu_pull(cpu) & ~CPU_STATUS_MASK);
+  cpu_write_status(cpu, cpu_pull(cpu));
 }
 
 void cpu_rol(CPU * cpu, Address addr) {
@@ -790,7 +805,7 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
 
   i += sprintf(buffer + i,
                "A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%3d",
-               cpu->a, cpu->x, cpu->y, cpu->status, cpu->sp, ppu_cycle);
+               cpu->a, cpu->x, cpu->y, cpu_read_status(cpu) & 0xEF, cpu->sp, ppu_cycle);
 
   // TODO: Mising SL - the scanline, I don't fully understand it
 }
@@ -848,9 +863,6 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
 
   cpu_debug_reset(cpu, buffer);
   printf("\n");
-
-  // Handle status register quirk for this test
-  cpu->b = 0;
 
   int lineno = 1;
   char test[CPU_DEBUG_LENGTH + 1], debug[CPU_DEBUG_LENGTH];
