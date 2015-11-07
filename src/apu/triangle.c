@@ -8,16 +8,17 @@
  */
 
 struct Triangle {
-  bool control_flag       : 1;
-  byte counter_reload     : 7;
-  uint16_t timer          : 11;
-  byte length_counter     : 5;
+  bool control_flag     : 1;
+  byte counter_reload   : 7;
+  uint16_t period       : 11;
+  byte length           : 5;
 
   // Internal variables
-  uint16_t timer_val      : 11;
-  uint16_t sequence_val   : 5;
-  byte length_counter_val : 5;
-  byte linear_counter_val : 5;
+  uint16_t period_timer : 11;
+  byte period_val       : 5;
+  byte length_timer     : 5;
+  bool linear_reload    : 1;
+  byte linear_timer     : 7;
 };
 
 static byte triangle_sequencer[32] = {
@@ -28,30 +29,38 @@ static byte triangle_sequencer[32] = {
 byte triangle_sample(Triangle * triangle) {
   // TODO: Liner counter gate
 
-  if (triangle->control_flag != 0 && triangle->length_counter_val == 0) {
+  if (triangle->control_flag && triangle->length_timer == 0) {
     return 0;
   }
 
-  return triangle_sequencer[triangle->sequence_val];
+  return triangle_sequencer[triangle->period_val];
 }
 
-void triangle_timer_tick(Triangle * triangle) {
-  if (triangle->timer_val == 0) {
-    triangle->sequence_val += 1;
-    triangle->timer_val = triangle->timer;
+void triangle_period_tick(Triangle * triangle) {
+  if (triangle->period_timer == 0) {
+    triangle->period_val += 1;
+    triangle->period_timer = triangle->period;
   } else {
-    triangle->timer_val -= 1;
+    triangle->period_timer -= 1;
   }
 }
 
-void triangle_length_counter_tick(Triangle * triangle) {
-  if (triangle->control_flag != 0 && triangle->length_counter_val != 0) {
-    triangle->length_counter_val -= 1;
+void triangle_length_tick(Triangle * triangle) {
+  if (triangle->control_flag != 0 && triangle->length_timer != 0) {
+    triangle->length_timer -= 1;
   }
 }
 
-void triangle_linear_counter_tick(Triangle * triangle) {
-  (void)triangle;
+void triangle_linear_tick(Triangle * triangle) {
+  if (triangle->linear_reload) {
+    triangle->linear_timer = triangle->counter_reload;
+  } else if (triangle->linear_timer != 0) {
+    triangle->linear_timer--;
+  }
+
+  if (!triangle->control_flag) {
+    triangle->linear_reload = false;
+  }
 }
 
 void triangle_write(Triangle * triangle, byte addr, byte val) {

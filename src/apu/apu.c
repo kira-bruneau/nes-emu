@@ -110,8 +110,8 @@ static void apu_timers_tick(APU * apu) {
   pulse_period_tick(&apu->pulse2);
 
   // Tick twice since triangle timer ticks at 2 * APU (CPU)
-  triangle_timer_tick(&apu->triangle);
-  triangle_timer_tick(&apu->triangle);
+  triangle_period_tick(&apu->triangle);
+  triangle_period_tick(&apu->triangle);
 
   noise_timer_tick(&apu->noise);
 }
@@ -121,14 +121,14 @@ static void apu_half_frame_tick(APU * apu) {
   pulse_sweep_tick(&apu->pulse2);
   pulse_length_tick(&apu->pulse1);
   pulse_length_tick(&apu->pulse2);
-  triangle_length_counter_tick(&apu->triangle);
+  triangle_length_tick(&apu->triangle);
   noise_length_counter_tick(&apu->noise);
 }
 
 static void apu_quarter_frame_tick(APU * apu) {
   pulse_envelope_tick(&apu->pulse1);
   pulse_envelope_tick(&apu->pulse2);
-  triangle_linear_counter_tick(&apu->triangle);
+  triangle_linear_tick(&apu->triangle);
   noise_envelope_tick(&apu->noise);
 }
 
