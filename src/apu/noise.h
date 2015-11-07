@@ -5,6 +5,7 @@
 
 typedef struct Noise Noise;
 
+void noise_init(Noise * noise);
 byte noise_sample(Noise * noise);
 void noise_timer_tick(Noise * noise);
 void noise_length_counter_tick(Noise * noise);

@@ -1,4 +1,5 @@
 #include "pulse.h"
+#include "length_table.h"
 
 /**
  * References:
@@ -40,6 +41,31 @@ static byte pulse_sequencer[4][8] = {
   {0, 0, 0, 0, 1, 1, 1, 1},
   {1, 1, 1, 1, 1, 1, 0, 0}
 };
+
+void pulse_init(Pulse * pulse, byte channel) {
+  pulse->duty = 1;
+  pulse->loop = 0;
+  pulse->envelope_disabled = 1;
+  pulse->volume = 15;
+
+  pulse->sweep_enabled = 0;
+  pulse->sweep_period = 0;
+  pulse->sweep_negate = 0;
+  pulse->sweep_shift = 1;
+
+  pulse->period = 2047;
+  pulse->length = 1;
+
+  // Internal variables
+  pulse->channel = channel;
+  pulse->envelope_reload = true;
+  pulse->envelope_val = 0;
+  pulse->sweep_reload = true;
+  pulse->sweep_timer = 0;
+  pulse->period_timer = pulse->period;
+  pulse->period_val = 0;
+  pulse->length_timer = length_table[pulse->length];
+}
 
 byte pulse_sample(Pulse * pulse) {
   if (!pulse->loop && pulse->length_timer == 0) {

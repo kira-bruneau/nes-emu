@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 #include "noise.h"
 
 /**
@@ -28,6 +26,22 @@ struct Noise {
 static uint16_t noise_timer_periods[16] = {
   4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
 };
+
+void noise_init(Noise * noise) {
+  noise->loop = 1;
+  noise->envelope_disabled = 1;
+  noise->volume = 15;
+  noise->mode = 1;
+  noise->period = 10;
+  noise->length = 0;
+
+  // Internal variables
+  noise->envelope_reload = 0;
+  noise->envelope_val = 0;
+  noise->shift_register = 1;
+  noise->period_timer = 0;
+  noise->length_timer = 0;
+}
 
 byte noise_sample(Noise * noise) {
   if (!noise->loop && noise->length_timer == 0) {

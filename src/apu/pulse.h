@@ -5,6 +5,7 @@
 
 typedef struct Pulse Pulse;
 
+void pulse_init(Pulse * pulse, byte channel);
 byte pulse_sample(Pulse * pulse);
 void pulse_period_tick(Pulse * pulse);
 void pulse_length_tick(Pulse * pulse);

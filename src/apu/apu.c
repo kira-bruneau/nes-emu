@@ -45,46 +45,21 @@ struct APU {
   } frame_counter;
 };
 
-const byte length_table[] = {
-  10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
-  12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
-};
-
 APU * apu_create() {
   // Set everything to zero for now
   APU * apu = calloc(1, sizeof(APU));
 
-  // APU Tests
-  apu->status.pulse1 = 1;
+  apu->status.pulse1 = 0;
+  pulse_init(&apu->pulse1, 0);
 
-  apu->pulse1.duty = 1;
-  apu->pulse1.loop = 0;
-  apu->pulse1.envelope_disabled = 1;
-  apu->pulse1.volume = 15;
+  apu->status.pulse2 = 0;
+  pulse_init(&apu->pulse2, 1);
 
-  apu->pulse1.sweep_enabled = 0;
-  apu->pulse1.sweep_period = 0;
-  apu->pulse1.sweep_negate = 0;
-  apu->pulse1.sweep_shift = 1;
+  apu->status.triangle = 0;
+  triangle_init(&apu->triangle);
 
-  apu->pulse1.period = 2047;
-  apu->pulse1.length = 1;
-
-  // Internal variables
-  apu->pulse1.channel = 0;
-  apu->pulse1.envelope_reload = true;
-  apu->pulse1.envelope_val = 0;
-  apu->pulse1.sweep_reload = true;
-  apu->pulse1.sweep_timer = 0;
-  apu->pulse1.period_timer = apu->pulse1.period;
-  apu->pulse1.period_val = 0;
-  apu->pulse1.length_timer = length_table[apu->pulse1.length];
-
-  /* apu->status.triangle = 1; */
-  /* apu->triangle.timer = 200; */
-  /* apu->triangle.timer_val = apu->triangle.timer; */
-  /* apu->triangle.sequence_val = 0; */
-  /* apu->triangle.control_flag = 0; */
+  apu->status.noise = 1;
+  noise_init(&apu->noise);
 
   return apu;
 }
