@@ -68,7 +68,7 @@ void noise_period_tick(Noise * noise) {
 }
 
 void noise_length_tick(Noise * noise) {
-  if (noise->loop != 1 && noise->length_timer != 0) {
+  if (!noise->loop && noise->length_timer != 0) {
     noise->length_timer--;
   }
 }
@@ -109,7 +109,11 @@ byte noise_read(Noise * noise, byte addr) {
   case 0:
     val |= (noise->loop & 1) << 5;
     val |= (noise->envelope_disabled & 1) << 4;
-    val |= (noise->volume & 15) << 0;
+    if (noise->envelope_disabled) {
+      val |= (noise->volume & 15) << 0;
+    } else {
+      val |= (noise->envelope_val & 15) << 0;
+    }
     break;
   case 2:
     val |= (noise->mode & 1) << 7;

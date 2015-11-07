@@ -152,7 +152,11 @@ byte pulse_read(Pulse * pulse, byte addr) {
     val |= (pulse->duty & 3) << 6;
     val |= (pulse->loop & 1) << 5;
     val |= (pulse->envelope_disabled & 1) << 4;
-    val |= (pulse->volume & 15) << 0;
+    if (pulse->envelope_disabled) {
+      val |= (pulse->volume & 15) << 0;
+    } else {
+      val |= (pulse->envelope_val & 15) << 0;
+    }
     break;
   case 1:
     val |= (pulse->sweep_enabled & 1) << 7;
