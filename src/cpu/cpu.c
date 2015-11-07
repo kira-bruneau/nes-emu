@@ -638,7 +638,7 @@ void cpu_xaa(CPU * cpu, Address addr) {
 /**
  * Debugging
  */
-#define CPU_DEBUG_LENGTH 74
+#define CPU_DEBUG_LENGTH 82
 
 static int debug_addr_implied(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
