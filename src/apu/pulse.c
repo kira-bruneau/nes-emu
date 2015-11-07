@@ -30,7 +30,7 @@ struct Pulse {
   byte sweep_timer       : 3;
 
   uint16_t period_timer  : 11;
-  byte period_val        : 3;
+  byte phase             : 3;
 
   byte length_timer      : 8;
 };
@@ -43,28 +43,7 @@ static byte pulse_sequencer[4][8] = {
 };
 
 void pulse_init(Pulse * pulse, byte channel) {
-  pulse->duty = 1;
-  pulse->loop = 0;
-  pulse->envelope_disabled = 1;
-  pulse->volume = 15;
-
-  pulse->sweep_enabled = 0;
-  pulse->sweep_period = 0;
-  pulse->sweep_negate = 0;
-  pulse->sweep_shift = 1;
-
-  pulse->period = 2047;
-  pulse->length = 1;
-
-  // Internal variables
   pulse->channel = channel;
-  pulse->envelope_reload = true;
-  pulse->envelope_val = 0;
-  pulse->sweep_reload = true;
-  pulse->sweep_timer = 0;
-  pulse->period_timer = pulse->period;
-  pulse->period_val = 0;
-  pulse->length_timer = length_table[pulse->length];
 }
 
 byte pulse_sample(Pulse * pulse) {
@@ -72,7 +51,7 @@ byte pulse_sample(Pulse * pulse) {
     return 0;
   }
 
-  if (!pulse_sequencer[pulse->duty][pulse->period_val]) {
+  if (!pulse_sequencer[pulse->duty][pulse->phase]) {
     return 0;
   }
 
@@ -87,7 +66,7 @@ void pulse_period_tick(Pulse * pulse) {
   if (pulse->period_timer != 0) {
     pulse->period_timer--;
   } else {
-    pulse->period_val++;
+    pulse->phase++;
     pulse->period_timer = pulse->period;
   }
 }
@@ -138,9 +117,31 @@ void pulse_envelope_tick(Pulse * pulse) {
 }
 
 void pulse_write(Pulse * pulse, byte addr, byte val) {
-  (void)pulse;
-  (void)addr;
-  (void)val;
+  switch (addr) {
+  case 0:
+    pulse->duty = val >> 6 & 3;
+    pulse->loop = val >> 5 & 1;
+    pulse->envelope_disabled = val >> 4 & 1;
+    pulse->volume = val & 15;
+    break;
+  case 1:
+    pulse->sweep_enabled = val >> 7 & 1;
+    pulse->sweep_period = val >> 4 & 7;
+    pulse->sweep_negate = val >> 3 & 1;
+    pulse->sweep_shift = val & 7;
+    pulse->sweep_reload = true;
+    break;
+  case 2:
+    pulse->period = (pulse->period & 0xF0) | val;
+    break;
+  case 3:
+    pulse->length = val >> 3 & 31;
+    pulse->period = (val & 7) << 8 | (pulse->period & 0x0F);
+    pulse->length_timer = length_table[pulse->length];
+    pulse->envelope_reload = true;
+    pulse->phase = 0;
+    break;
+  }
 }
 
 byte pulse_read(Pulse * pulse, byte addr) {
