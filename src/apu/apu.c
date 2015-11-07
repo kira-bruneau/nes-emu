@@ -45,18 +45,40 @@ struct APU {
   } frame_counter;
 };
 
+const byte length_table[] = {
+  10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
+  12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
+};
+
 APU * apu_create() {
   // Set everything to zero for now
   APU * apu = calloc(1, sizeof(APU));
 
   // APU Tests
   apu->status.pulse1 = 1;
-  apu->pulse1.envelope = 15;
+
   apu->pulse1.duty = 1;
-  apu->pulse1.timer = 200;
-  apu->pulse1.timer_val = apu->pulse1.timer;
-  apu->pulse1.sequence_val = 0;
-  apu->pulse1.length_counter_halt = 1;
+  apu->pulse1.loop = 0;
+  apu->pulse1.envelope_disabled = 1;
+  apu->pulse1.volume = 15;
+
+  apu->pulse1.sweep_enabled = 0;
+  apu->pulse1.sweep_period = 0;
+  apu->pulse1.sweep_negate = 0;
+  apu->pulse1.sweep_shift = 1;
+
+  apu->pulse1.period = 2047;
+  apu->pulse1.length = 1;
+
+  // Internal variables
+  apu->pulse1.channel = 0;
+  apu->pulse1.envelope_reload = true;
+  apu->pulse1.envelope_val = 0;
+  apu->pulse1.sweep_reload = true;
+  apu->pulse1.sweep_timer = 0;
+  apu->pulse1.period_timer = apu->pulse1.period;
+  apu->pulse1.period_val = 0;
+  apu->pulse1.length_timer = length_table[apu->pulse1.length];
 
   /* apu->status.triangle = 1; */
   /* apu->triangle.timer = 200; */
@@ -84,8 +106,8 @@ float apu_sample(APU * apu) {
 }
 
 static void apu_timers_tick(APU * apu) {
-  pulse_timer_tick(&apu->pulse1);
-  pulse_timer_tick(&apu->pulse2);
+  pulse_period_tick(&apu->pulse1);
+  pulse_period_tick(&apu->pulse2);
 
   // Tick twice since triangle timer ticks at 2 * APU (CPU)
   triangle_timer_tick(&apu->triangle);
@@ -97,8 +119,8 @@ static void apu_timers_tick(APU * apu) {
 static void apu_half_frame_tick(APU * apu) {
   pulse_sweep_tick(&apu->pulse1);
   pulse_sweep_tick(&apu->pulse2);
-  pulse_length_counter_tick(&apu->pulse1);
-  pulse_length_counter_tick(&apu->pulse2);
+  pulse_length_tick(&apu->pulse1);
+  pulse_length_tick(&apu->pulse2);
   triangle_length_counter_tick(&apu->triangle);
   noise_length_counter_tick(&apu->noise);
 }
