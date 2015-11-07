@@ -119,23 +119,23 @@ void pulse_envelope_tick(Pulse * pulse) {
 void pulse_write(Pulse * pulse, byte addr, byte val) {
   switch (addr) {
   case 0:
-    pulse->duty = val >> 6 & 3;
-    pulse->loop = val >> 5 & 1;
-    pulse->envelope_disabled = val >> 4 & 1;
-    pulse->volume = val & 15;
+    pulse->duty = (val >> 6) & 3;
+    pulse->loop = (val >> 5) & 1;
+    pulse->envelope_disabled = (val >> 4) & 1;
+    pulse->volume = (val >> 0) & 15;
     break;
   case 1:
-    pulse->sweep_enabled = val >> 7 & 1;
-    pulse->sweep_period = val >> 4 & 7;
-    pulse->sweep_negate = val >> 3 & 1;
-    pulse->sweep_shift = val & 7;
+    pulse->sweep_enabled = (val >> 7) & 1;
+    pulse->sweep_period = (val >> 4) & 7;
+    pulse->sweep_negate = (val >> 3) & 1;
+    pulse->sweep_shift = (val >> 0) & 7;
     pulse->sweep_reload = true;
     break;
   case 2:
     pulse->period = (pulse->period & 0xF0) | val;
     break;
   case 3:
-    pulse->length = val >> 3 & 31;
+    pulse->length = (val >> 3) & 31;
     pulse->period = (val & 7) << 8 | (pulse->period & 0x0F);
     pulse->length_timer = length_table[pulse->length];
     pulse->envelope_reload = true;

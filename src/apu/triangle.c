@@ -69,15 +69,15 @@ void triangle_linear_tick(Triangle * triangle) {
 void triangle_write(Triangle * triangle, byte addr, byte val) {
   switch (addr) {
   case 0:
-    triangle->control_flag = val >> 7 & 1;
-    triangle->counter_reload = val & 127;
+    triangle->control_flag = (val >> 7) & 1;
+    triangle->counter_reload = (val >> 0) & 127;
     triangle->linear_reload = true;
     break;
   case 2:
     triangle->period = (triangle->period & 0xF0) | val;
     break;
   case 3:
-    triangle->length = val >> 3 & 31;
+    triangle->length = (val >> 3) & 31;
     triangle->period = (val & 7) << 8 | (triangle->period & 0x0F);
     triangle->length_timer = length_table[triangle->length];
     triangle->phase = 0;

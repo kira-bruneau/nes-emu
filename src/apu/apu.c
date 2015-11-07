@@ -49,7 +49,7 @@ APU * apu_create() {
   // Set everything to zero for now
   APU * apu = calloc(1, sizeof(APU));
 
-  apu->status.pulse1 = 1;
+  apu->status.pulse1 = 0;
   pulse_init(&apu->pulse1, 0);
 
   apu->status.pulse2 = 0;
@@ -58,7 +58,7 @@ APU * apu_create() {
   apu->status.triangle = 0;
   triangle_init(&apu->triangle);
 
-  apu->status.noise = 0;
+  apu->status.noise = 1;
   noise_init(&apu->noise);
 
   return apu;
@@ -173,15 +173,15 @@ void apu_write(APU * apu, byte addr, byte val) {
     dmc_write(&apu->dmc, addr - 16, val);
     break;
   case 20:
-    apu->status.dmc = val >> 4 & 1;
-    apu->status.noise = val >> 3 & 1;
-    apu->status.triangle = val >> 2 & 1;
-    apu->status.pulse1 = val >> 1 & 1;
-    apu->status.pulse2 = val & 1;
+    apu->status.dmc = (val >> 4) & 1;
+    apu->status.noise = (val >> 3) & 1;
+    apu->status.triangle = (val >> 2) & 1;
+    apu->status.pulse1 = (val >> 1) & 1;
+    apu->status.pulse2 = (val >> 0) & 1;
     break;
   case 21:
-    apu->frame_counter.mode = val >> 7 & 1;
-    apu->frame_counter.irq_inhibit = val >> 6 & 1;
+    apu->frame_counter.mode = (val >> 7) & 1;
+    apu->frame_counter.irq_inhibit = (val >> 6) & 1;
     break;
   }
 }
@@ -206,15 +206,15 @@ byte apu_read(APU * apu, byte addr) {
     val = dmc_read(&apu->dmc, addr - 16);
     break;
   case 20:
-    val |= apu->status.dmc = val & 1 << 4;
-    val |= apu->status.noise = val & 1 << 3;
-    val |= apu->status.triangle = val & 1 << 2;
-    val |= apu->status.pulse1 = val & 1 << 1;
-    val |= apu->status.pulse2 = val & 1;
+    val |= apu->status.dmc = (val & 1) << 4;
+    val |= apu->status.noise = (val & 1) << 3;
+    val |= apu->status.triangle = (val & 1) << 2;
+    val |= apu->status.pulse1 = (val & 1) << 1;
+    val |= apu->status.pulse2 = (val & 1) << 0;
     break;
   case 21:
-    val |= apu->frame_counter.mode = val & 1 << 7;
-    val |= apu->frame_counter.irq_inhibit = val & 1 << 6;
+    val |= apu->frame_counter.mode = (val & 1) << 7;
+    val |= apu->frame_counter.irq_inhibit = (val & 1) << 6;
     break;
   }
 

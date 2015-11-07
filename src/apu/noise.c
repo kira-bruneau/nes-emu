@@ -87,16 +87,16 @@ void noise_envelope_tick(Noise * noise) {
 void noise_write(Noise * noise, byte addr, byte val) {
   switch (addr) {
   case 0:
-    noise->loop = val >> 5 & 1;
-    noise->envelope_disabled = val >> 4 & 1;
-    noise->volume = val & 15;
+    noise->loop = (val >> 5) & 1;
+    noise->envelope_disabled = (val >> 4) & 1;
+    noise->volume = (val >> 0) & 15;
     break;
   case 2:
-    noise->mode = val >> 7 & 1;
-    noise->period = val & 15;
+    noise->mode = (val >> 7) & 1;
+    noise->period = (val >> 0) & 15;
     break;
   case 3:
-    noise->length = val >> 3 & 31;
+    noise->length = (val >> 3) & 31;
     noise->length_timer = length_table[noise->length];
     break;
   }
@@ -107,16 +107,16 @@ byte noise_read(Noise * noise, byte addr) {
 
   switch (addr) {
   case 0:
-    val |= noise->loop & 1 << 5;
-    val |= noise->envelope_disabled & 1 << 4;
-    val |= noise->volume & 15;
+    val |= (noise->loop & 1) << 5;
+    val |= (noise->envelope_disabled & 1) << 4;
+    val |= (noise->volume & 15) << 0;
     break;
   case 2:
-    val |= noise->mode & 1 << 7;
-    val |= noise->period & 15;
+    val |= (noise->mode & 1) << 7;
+    val |= (noise->period & 15) << 0;
     break;
   case 3:
-    val |= noise->length & 31 << 3;
+    val |= (noise->length & 31) << 3;
     break;
   }
 
