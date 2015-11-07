@@ -49,7 +49,7 @@ APU * apu_create() {
   // Set everything to zero for now
   APU * apu = calloc(1, sizeof(APU));
 
-  apu->status.pulse1 = 0;
+  apu->status.pulse1 = 1;
   pulse_init(&apu->pulse1, 0);
 
   apu->status.pulse2 = 0;
@@ -58,7 +58,7 @@ APU * apu_create() {
   apu->status.triangle = 0;
   triangle_init(&apu->triangle);
 
-  apu->status.noise = 1;
+  apu->status.noise = 0;
   noise_init(&apu->noise);
 
   return apu;
@@ -80,7 +80,7 @@ float apu_sample(APU * apu) {
   return pulse_out + tnd_out;
 }
 
-static void apu_timers_tick(APU * apu) {
+static void apu_period_tick(APU * apu) {
   pulse_period_tick(&apu->pulse1);
   pulse_period_tick(&apu->pulse2);
 
@@ -88,7 +88,7 @@ static void apu_timers_tick(APU * apu) {
   triangle_period_tick(&apu->triangle);
   triangle_period_tick(&apu->triangle);
 
-  noise_timer_tick(&apu->noise);
+  noise_period_tick(&apu->noise);
 }
 
 static void apu_half_frame_tick(APU * apu) {
@@ -97,7 +97,7 @@ static void apu_half_frame_tick(APU * apu) {
   pulse_length_tick(&apu->pulse1);
   pulse_length_tick(&apu->pulse2);
   triangle_length_tick(&apu->triangle);
-  noise_length_counter_tick(&apu->noise);
+  noise_length_tick(&apu->noise);
 }
 
 static void apu_quarter_frame_tick(APU * apu) {
@@ -109,11 +109,11 @@ static void apu_quarter_frame_tick(APU * apu) {
 
 /*
  * Waveform subunits are ticked at half APU intervals.
- * I assume this is to ensure ordering between timer ticks
- * and subunit ticks.
+ * I assume this is to ensure ordering between period ticks
+ * and the other ticks.
  *
  * Since I rounded down the clock values for the steps, the
- * frame counter must be ticked after the timers.
+ * frame counter must be ticked after the period.
  */
 static void apu_frame_counter_tick(APU * apu) {
   if (apu->frame_counter.mode == 0) {
@@ -151,6 +151,6 @@ static void apu_frame_counter_tick(APU * apu) {
 }
 
 void apu_tick(APU * apu) {
-  apu_timers_tick(apu);
+  apu_period_tick(apu);
   apu_frame_counter_tick(apu);
 }

@@ -1,4 +1,5 @@
 #include "noise.h"
+#include "length_table.h"
 
 /**
  * References:
@@ -29,18 +30,18 @@ static uint16_t noise_timer_periods[16] = {
 
 void noise_init(Noise * noise) {
   noise->loop = 1;
-  noise->envelope_disabled = 1;
+  noise->envelope_disabled = 0;
   noise->volume = 15;
-  noise->mode = 1;
+  noise->mode = 0;
   noise->period = 10;
-  noise->length = 0;
+  noise->length = 1;
 
   // Internal variables
-  noise->envelope_reload = 0;
+  noise->envelope_reload = true;
   noise->envelope_val = 0;
   noise->shift_register = 1;
-  noise->period_timer = 0;
-  noise->length_timer = 0;
+  noise->period_timer = noise->period;
+  noise->length_timer = length_table[noise->length];
 }
 
 byte noise_sample(Noise * noise) {
@@ -69,7 +70,7 @@ static void noise_shift(Noise * noise) {
   noise->shift_register |= feedback << 14;
 }
 
-void noise_timer_tick(Noise * noise) {
+void noise_period_tick(Noise * noise) {
   if (noise->period_timer == 0) {
     noise_shift(noise);
     noise->period_timer = noise_timer_periods[noise->period];
@@ -78,7 +79,7 @@ void noise_timer_tick(Noise * noise) {
   }
 }
 
-void noise_length_counter_tick(Noise * noise) {
+void noise_length_tick(Noise * noise) {
   if (noise->loop != 1 && noise->length_timer != 0) {
     noise->length_timer -= 1;
   }
