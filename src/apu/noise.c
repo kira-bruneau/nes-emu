@@ -29,19 +29,7 @@ static uint16_t noise_timer_periods[16] = {
 };
 
 void noise_init(Noise * noise) {
-  noise->loop = 1;
-  noise->envelope_disabled = 0;
-  noise->volume = 15;
-  noise->mode = 0;
-  noise->period = 10;
-  noise->length = 1;
-
-  // Internal variables
-  noise->envelope_reload = true;
-  noise->envelope_val = 0;
   noise->shift_register = 1;
-  noise->period_timer = noise->period;
-  noise->length_timer = length_table[noise->length];
 }
 
 byte noise_sample(Noise * noise) {
@@ -97,9 +85,20 @@ void noise_envelope_tick(Noise * noise) {
 }
 
 void noise_write(Noise * noise, byte addr, byte val) {
-  (void)noise;
-  (void)addr;
-  (void)val;
+  switch (addr) {
+  case 0:
+    noise->loop = val >> 5 & 1;
+    noise->envelope_disabled = val >> 4 & 1;
+    noise->volume = val & 15;
+    break;
+  case 2:
+    noise->mode = val >> 7 & 1;
+    noise->period = val & 15;
+    break;
+  case 3:
+    noise->length = val >> 3 & 31;
+    break;
+  }
 }
 
 byte noise_read(Noise * noise, byte addr) {
