@@ -102,7 +102,22 @@ void noise_write(Noise * noise, byte addr, byte val) {
 }
 
 byte noise_read(Noise * noise, byte addr) {
-  (void)noise;
-  (void)addr;
-  return 0;
+  byte val = 0;
+
+  switch (addr) {
+  case 0:
+    val |= noise->loop & 1 << 5;
+    val |= noise->envelope_disabled & 1 << 4;
+    val |= noise->volume & 15;
+    break;
+  case 2:
+    val |= noise->mode & 1 << 7;
+    val |= noise->period & 15;
+    break;
+  case 3:
+    val |= noise->length & 31 << 3;
+    break;
+  }
+
+  return val;
 }
