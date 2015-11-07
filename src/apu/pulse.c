@@ -132,11 +132,11 @@ void pulse_write(Pulse * pulse, byte addr, byte val) {
     pulse->sweep_reload = true;
     break;
   case 2:
-    pulse->period = (pulse->period & 0xF0) | val;
+    pulse->period = (pulse->period & 0x0700) | val;
     break;
   case 3:
     pulse->length = (val >> 3) & 31;
-    pulse->period = (val & 0x07) << 8 | (pulse->period & 0x0F);
+    pulse->period = (val & 0x07) << 8 | (pulse->period & 0x00FF);
     pulse->length_timer = length_table[pulse->length];
     pulse->envelope_reload = true;
     pulse->phase = 0;
@@ -148,6 +148,7 @@ byte pulse_read(Pulse * pulse, byte addr) {
   byte val = 0;
 
   switch (addr) {
+  case 0:
     val |= (pulse->duty & 3) << 6;
     val |= (pulse->loop & 1) << 5;
     val |= (pulse->envelope_disabled & 1) << 4;
@@ -159,12 +160,12 @@ byte pulse_read(Pulse * pulse, byte addr) {
     val |= (pulse->sweep_negate & 1) << 3;
     val |= (pulse->sweep_shift & 7) << 0;
   case 2:
-    val |= pulse->period & 0x0F;
+    val |= pulse->period & 0x00FF;
     break;
   case 3:
     val |= (pulse->length & 31) << 3;
-    val |= (pulse->period & 0x70) >> 8;
+    val |= (pulse->period & 0x0700) >> 8;
   }
 
-  return 0;
+  return val;
 }

@@ -74,11 +74,11 @@ void triangle_write(Triangle * triangle, byte addr, byte val) {
     triangle->linear_reload = true;
     break;
   case 2:
-    triangle->period = (triangle->period & 0xF0) | val;
+    triangle->period = (triangle->period & 0x0700) | val;
     break;
   case 3:
     triangle->length = (val >> 3) & 31;
-    triangle->period = (val & 0x07) << 8 | (triangle->period & 0x0F);
+    triangle->period = (val & 0x07) << 8 | (triangle->period & 0x00FF);
     triangle->length_timer = length_table[triangle->length];
     triangle->phase = 0;
     break;
@@ -94,13 +94,13 @@ byte triangle_read(Triangle * triangle, byte addr) {
     val |= (triangle->counter_reload & 127) << 0;
     break;
   case 2:
-    val |= triangle->period & 0x0F;
+    val |= triangle->period & 0x00FF;
     break;
   case 3:
     val |= (triangle->length & 31) << 3;
-    val |= (triangle->period & 0x70) >> 8;
+    val |= (triangle->period & 0x0700) >> 8;
     break;
   }
 
-  return 0;
+  return val;
 }
