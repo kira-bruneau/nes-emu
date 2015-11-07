@@ -6,8 +6,8 @@
 
 #include "cpu.h"
 #include "opcode.h"
-#include "../memory/memory.h"
-#include "../util.h"
+#include "memory/memory.h"
+#include "util.h"
 
 /**
  * References:

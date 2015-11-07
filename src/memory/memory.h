@@ -3,8 +3,8 @@
 
 #include <stddef.h>
 
-#include "../cartridge/cartridge.h"
-#include "../util.h"
+#include "cartridge/cartridge.h"
+#include "util.h"
 
 /**
  * References:

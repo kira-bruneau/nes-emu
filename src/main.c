@@ -1,7 +1,5 @@
 #include <GLFW/glfw3.h>
 
-#include <stdlib.h>
-
 #include "ui/events.h"
 #include "ui/render.h"
 
@@ -15,14 +13,14 @@ int main() {
   glfwSetErrorCallback(event_error);
 
   if (!glfwInit()) {
-    return EXIT_FAILURE;
+    return 1;
   }
 
   // Create window
   window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "NES Emulator", NULL, NULL);
   if (!window) {
     glfwTerminate();
-    return EXIT_FAILURE;
+    return 1;
   }
 
   // Register key events
@@ -44,5 +42,5 @@ int main() {
 
   glfwDestroyWindow(window);
   glfwTerminate();
-  return EXIT_SUCCESS;
+  return 0;
 }
