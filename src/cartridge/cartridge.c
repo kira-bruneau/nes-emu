@@ -27,25 +27,6 @@ typedef struct NESHeader {
   byte zero[7];
 } NESHeader;
 
-void nes_header_print(NESHeader * header) {
-  printf("magic: %.*s\n", 3, header->magic);
-  printf("prg_rom_size: %i\n", header->prg_rom_size);
-  printf("chr_rom_size: %i\n", header->chr_rom_size);
-  printf("\n");
-  printf("mirror_vert: %i\n", header->mirror_vert);
-  printf("prg_ram: %i\n", header->prg_ram);
-  printf("trainer: %i\n", header->trainer);
-  printf("mirror_quad: %i\n", header->mirror_quad);
-  printf("mapper_low: %i\n", header->mapper_low);
-  printf("\n");
-  printf("vs_unisystem: %i\n", header->vs_unisystem);
-  printf("playchoice10: %i\n", header->playchoice10);
-  printf("version: %i\n", header->version);
-  printf("mapper_high: %i\n", header->mapper_high);
-  printf("\n");
-  printf("prg_ram_size: %i\n", header->prg_ram_size);
-}
-
 Cartridge * cartridge_new(GFile * rom_file) {
   Cartridge * cartridge = g_malloc(sizeof(Cartridge));
 
