@@ -17,9 +17,7 @@
 
 struct CPU {
   Memory * mem;
-
   int clock;
-  uint16_t last_addr;
 
   uint16_t pc;
   byte sp;
@@ -67,6 +65,7 @@ CPU * cpu_new(Memory * mem) {
 void cpu_reset(CPU * cpu) {
   cpu->clock = 0;
 
+  // Should be initalized from reset vector ($FFFC-$FFFD)
   cpu->pc = 0xC000;
   cpu->sp = 0xFD;
   cpu->a = 0;
@@ -91,7 +90,7 @@ uint16_t cpu_next_memory16(CPU * cpu) {
   return addr;
 }
 
-static bool page_cross(uint16_t orig_addr, uint16_t new_addr) {
+static bool pages_differ(uint16_t orig_addr, uint16_t new_addr) {
   return (orig_addr & 0xFF00) != (new_addr & 0xFF00);
 }
 
@@ -105,6 +104,7 @@ void cpu_next_instr(CPU * cpu) {
     .null = false
   };
 
+  bool page_crossed = false;
   switch (opcode_addressing_mode[opcode]) {
   case ADDR_IMPLIED:
   case ADDR_ACCUMULATOR:
@@ -130,15 +130,18 @@ void cpu_next_instr(CPU * cpu) {
     break;
   case ADDR_ABSOLUTE_X:
     addr.val = cpu_next_memory16(cpu) + cpu->x;
+    page_crossed = pages_differ(addr.val - cpu->x, addr.val);
     break;
   case ADDR_ABSOLUTE_Y:
     addr.val = cpu_next_memory16(cpu) + cpu->y;
+    page_crossed = pages_differ(addr.val - cpu->y, addr.val);
     break;
   case ADDR_INDIRECT:
     addr.val = memory_read16(cpu->mem, cpu_next_memory16(cpu));
     break;
   case ADDR_INDIRECT_INDEXED:
     addr.val = memory_zero_page_read16(cpu->mem, cpu_next_memory(cpu)) + cpu->y;
+    page_crossed = pages_differ(addr.val - cpu->y, addr.val);
     break;
   case ADDR_INDEXED_INDIRECT:
     addr.val = memory_zero_page_read16(cpu->mem, cpu_next_memory(cpu) + cpu->x);
@@ -147,8 +150,9 @@ void cpu_next_instr(CPU * cpu) {
 
   instruction_action[instruction](cpu, addr);
   cpu->clock += opcode_cycles[opcode];
-
-  // TODO: Detect page crosses
+  if (page_crossed) {
+    cpu->clock += opcode_page_cross_cycles[opcode];
+  }
 }
 
 /*
@@ -174,6 +178,18 @@ static uint16_t cpu_pull16(CPU * cpu) {
   uint16_t val = memory_read16(cpu->mem, STACK_MIN + cpu->sp + 1);
   cpu->sp += 2;
   return val;
+}
+
+/**
+ * Branching
+ */
+static void cpu_branch(CPU * cpu, Address addr) {
+  cpu->clock++;
+  if (pages_differ(cpu->pc, addr.val)) {
+    cpu->clock++;
+  }
+
+  cpu->pc = addr.val;
 }
 
 /**
@@ -230,19 +246,19 @@ void cpu_asl(CPU * cpu, Address addr) {
 
 void cpu_bcc(CPU * cpu, Address addr) {
   if (!cpu->c) {
-    cpu->pc = addr.val;
+    cpu_branch(cpu, addr);
   }
 }
 
 void cpu_bcs(CPU * cpu, Address addr) {
   if (cpu->c) {
-    cpu->pc = addr.val;
+    cpu_branch(cpu, addr);
   }
 }
 
 void cpu_beq(CPU * cpu, Address addr) {
   if (cpu->z) {
-    cpu->pc = addr.val;
+    cpu_branch(cpu, addr);
   }
 }
 
@@ -255,19 +271,19 @@ void cpu_bit(CPU * cpu, Address addr) {
 
 void cpu_bmi(CPU * cpu, Address addr) {
   if (cpu->n) {
-    cpu->pc = addr.val;
+    cpu_branch(cpu, addr);
   }
 }
 
 void cpu_bne(CPU * cpu, Address addr) {
   if (!cpu->z) {
-    cpu->pc = addr.val;
+    cpu_branch(cpu, addr);
   }
 }
 
 void cpu_bpl(CPU * cpu, Address addr) {
   if (!cpu->n) {
-    cpu->pc = addr.val;
+    cpu_branch(cpu, addr);
   }
 }
 
@@ -284,13 +300,13 @@ void cpu_brk(CPU * cpu, Address addr) {
 
 void cpu_bvc(CPU * cpu, Address addr) {
   if (!cpu->v) {
-    cpu->pc = addr.val;
+    cpu_branch(cpu, addr);
   }
 }
 
 void cpu_bvs(CPU * cpu, Address addr) {
   if (cpu->v) {
-    cpu->pc = addr.val;
+    cpu_branch(cpu, addr);
   }
 }
 
