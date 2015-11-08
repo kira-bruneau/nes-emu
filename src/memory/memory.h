@@ -27,7 +27,7 @@
 
 typedef struct Memory Memory;
 
-Memory * memory_new();
+Memory * memory_new(void);
 void memory_reset(Memory * mem);
 void memory_map_cartridge(Memory * mem, Cartridge * cartridge);
 

@@ -9,7 +9,7 @@ struct Memory {
   Cartridge * cartridge;
 };
 
-Memory * memory_new() {
+Memory * memory_new(void) {
   Memory * mem = g_malloc(sizeof(Memory));
   mem->ram = g_malloc0(RAM_SIZE);
   mem->cartridge = NULL;
