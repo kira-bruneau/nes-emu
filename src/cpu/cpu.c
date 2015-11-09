@@ -311,18 +311,22 @@ void cpu_bvs(CPU * cpu, Address addr) {
 }
 
 void cpu_clc(CPU * cpu, Address addr) {
+  (void)addr;
   cpu->c = 0;
 }
 
 void cpu_cld(CPU * cpu, Address addr) {
+  (void)addr;
   cpu->d = 0;
 }
 
 void cpu_cli(CPU * cpu, Address addr) {
+  (void)addr;
   cpu->i = 0;
 }
 
 void cpu_clv(CPU * cpu, Address addr) {
+  (void)addr;
   cpu->v = 0;
 }
 
@@ -348,12 +352,14 @@ void cpu_dec(CPU * cpu, Address addr) {
 }
 
 void cpu_dex(CPU * cpu, Address addr) {
+  (void)addr;
   byte result = cpu->x - 1;
   cpu->x = result;
   cpu_zn(cpu, result);
 }
 
 void cpu_dey(CPU * cpu, Address addr) {
+  (void)addr;
   byte result = cpu->y - 1;
   cpu->y = result;
   cpu_zn(cpu, result);
@@ -372,12 +378,14 @@ void cpu_inc(CPU * cpu, Address addr) {
 }
 
 void cpu_inx(CPU * cpu, Address addr) {
+  (void)addr;
   byte result = cpu->x + 1;
   cpu->x = result;
   cpu_zn(cpu, result);
 }
 
 void cpu_iny(CPU * cpu, Address addr) {
+  (void)addr;
   byte result = cpu->y + 1;
   cpu->y = result;
   cpu_zn(cpu, result);
@@ -442,7 +450,8 @@ void cpu_lsr(CPU * cpu, Address addr) {
 }
 
 void cpu_nop(CPU * cpu, Address addr) {
-
+  (void)cpu;
+  (void)addr;
 }
 
 void cpu_ora(CPU * cpu, Address addr) {
@@ -452,14 +461,17 @@ void cpu_ora(CPU * cpu, Address addr) {
 }
 
 void cpu_pha(CPU * cpu, Address addr) {
+  (void)addr;
   cpu_push(cpu, cpu->a);
 }
 
 void cpu_php(CPU * cpu, Address addr) {
   cpu_push(cpu, cpu_read_status(cpu));
+  (void)addr;
 }
 
 void cpu_pla(CPU * cpu, Address addr) {
+  (void)addr;
   byte val = cpu_pull(cpu);
   cpu->a = val;
   cpu_zn(cpu, val);
@@ -467,6 +479,7 @@ void cpu_pla(CPU * cpu, Address addr) {
 
 void cpu_plp(CPU * cpu, Address addr) {
   cpu_write_status(cpu, cpu_pull(cpu));
+  (void)addr;
 }
 
 void cpu_rol(CPU * cpu, Address addr) {
@@ -515,6 +528,7 @@ void cpu_rti(CPU * cpu, Address addr) {
 }
 
 void cpu_rts(CPU * cpu, Address addr) {
+  (void)addr;
   cpu->pc = cpu_pull16(cpu) + 1;
 }
 
@@ -530,14 +544,17 @@ void cpu_sbc(CPU * cpu, Address addr) {
 }
 
 void cpu_sec(CPU * cpu, Address addr) {
+  (void)addr;
   cpu->c = 1;
 }
 
 void cpu_sed(CPU * cpu, Address addr) {
+  (void)addr;
   cpu->d = 1;
 }
 
 void cpu_sei(CPU * cpu, Address addr) {
+  (void)addr;
   cpu->i = 1;
 }
 
@@ -554,35 +571,41 @@ void cpu_sty(CPU * cpu, Address addr) {
 }
 
 void cpu_tax(CPU * cpu, Address addr) {
+  (void)addr;
   byte val = cpu->a;
   cpu->x = val;
   cpu_zn(cpu, val);
 }
 
 void cpu_tay(CPU * cpu, Address addr) {
+  (void)addr;
   byte val = cpu->a;
   cpu->y = val;
   cpu_zn(cpu, val);
 }
 
 void cpu_tsx(CPU * cpu, Address addr) {
+  (void)addr;
   byte val = cpu->sp;
   cpu->x = val;
   cpu_zn(cpu, val);
 }
 
 void cpu_txa(CPU * cpu, Address addr) {
+  (void)addr;
   byte val = cpu->x;
   cpu->a = val;
   cpu_zn(cpu, val);
 }
 
 void cpu_txs(CPU * cpu, Address addr) {
+  (void)addr;
   byte val = cpu->x;
   cpu->sp = val;
 }
 
 void cpu_tya(CPU * cpu, Address addr) {
+  (void)addr;
   byte val = cpu->y;
   cpu->a = val;
   cpu_zn(cpu, val);
@@ -592,78 +615,116 @@ void cpu_tya(CPU * cpu, Address addr) {
  * Unoffical instructions
  */
 void cpu_ahx(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_alr(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_anc(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_arr(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_axs(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_dcp(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_isc(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_las(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_lax(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_rla(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_rra(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_sax(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_shx(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_shy(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_slo(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_sre(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_stp(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_tas(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
 void cpu_xaa(CPU * cpu, Address addr) {
+  (void)cpu;
+  (void)addr;
   printf("STUB\n");
 }
 
@@ -673,11 +734,13 @@ void cpu_xaa(CPU * cpu, Address addr) {
 #define CPU_DEBUG_LENGTH 82
 
 static int debug_addr_implied(CPU * cpu, char * buffer, Instruction instruction) {
+  (void)cpu;
   const char * name = instruction_name[instruction];
   return sprintf(buffer, "       %s", name);
 }
 
 static int debug_addr_accumulator(CPU * cpu, char * buffer, Instruction instruction) {
+  (void)cpu;
   const char * name = instruction_name[instruction];
   return sprintf(buffer, "       %s A", name);
 }
@@ -859,6 +922,7 @@ bool cpu_debug_goto(CPU * cpu, const char * buffer) {
 }
 
 bool cpu_debug_reset(CPU * cpu, const char * buffer) {
+  (void)buffer;
   cpu_reset(cpu);
   memory_reset(cpu->mem);
   printf("Reset to initial state\n");
@@ -905,6 +969,8 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
 }
 
 bool cpu_debug_quit(CPU * cpu, const char * buffer) {
+  (void)cpu;
+  (void)buffer;
   return false;
 }
 
