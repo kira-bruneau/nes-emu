@@ -158,67 +158,63 @@ void apu_tick(APU * apu) {
   apu_frame_counter_tick(apu);
 }
 
-void apu_write(APU * apu, byte addr, byte val) {
-  switch (addr) {
-  case 0: case 1: case 2: case 3:
-    pulse_write(&apu->pulse1, addr, val);
-    break;
-  case 4: case 5: case 6: case 7:
-    pulse_write(&apu->pulse2, addr - 4, val);
-    break;
-  case 8: case 9: case 10: case 11:
-    triangle_write(&apu->triangle, addr - 8, val);
-    break;
-  case 12: case 13: case 14: case 15:
-    noise_write(&apu->noise, addr - 12, val);
-    break;
-  case 16: case 17: case 18: case 19:
-    dmc_write(&apu->dmc, addr - 16, val);
-    break;
-  case 20:
+void apu_write(APU * apu, APUAddress addr, byte val) {
+  if (addr >= APU_PULSE1 && addr < APU_PULSE1_END) {
+    pulse_write(&apu->pulse1, addr - APU_PULSE1, val);
+
+  } else if (addr >= APU_PULSE2 && addr < APU_PULSE2_END) {
+    pulse_write(&apu->pulse2, addr - APU_PULSE2, val);
+
+  } else if (addr >= APU_TRIANGLE && addr < APU_TRIANGLE_END) {
+    triangle_write(&apu->triangle, addr - APU_TRIANGLE, val);
+
+  } else if (addr >= APU_NOISE && addr < APU_NOISE_END) {
+    noise_write(&apu->noise, addr - APU_NOISE, val);
+
+  } else if (addr >= APU_DMC && addr < APU_DMC_END) {
+    dmc_write(&apu->dmc, addr - APU_DMC, val);
+
+  } else if (addr == APU_STATUS) {
     apu->status.dmc = (val >> 4) & 1;
     apu->status.noise = (val >> 3) & 1;
     apu->status.triangle = (val >> 2) & 1;
     apu->status.pulse1 = (val >> 1) & 1;
     apu->status.pulse2 = (val >> 0) & 1;
-    break;
-  case 21:
+
+  } else if (addr == APU_FRAME_COUNTER) {
     apu->frame_counter.mode = (val >> 7) & 1;
     apu->frame_counter.irq_inhibit = (val >> 6) & 1;
-    break;
   }
 }
 
-byte apu_read(APU * apu, byte addr) {
+byte apu_read(APU * apu, APUAddress addr) {
   byte val = 0;
 
-  switch (addr) {
-  case 0: case 1: case 2: case 3:
-    val = pulse_read(&apu->pulse1, addr);
-    break;
-  case 4: case 5: case 6: case 7:
-    val = pulse_read(&apu->pulse2, addr - 4);
-    break;
-  case 8: case 9: case 10: case 11:
-    val = triangle_read(&apu->triangle, addr - 8);
-    break;
-  case 12: case 13: case 14: case 15:
-    val = noise_read(&apu->noise, addr - 12);
-    break;
-  case 16: case 17: case 18: case 19:
-    val = dmc_read(&apu->dmc, addr - 16);
-    break;
-  case 20:
+  if (addr >= APU_PULSE1 && addr < APU_PULSE1_END) {
+    val = pulse_read(&apu->pulse1, addr - APU_PULSE1);
+
+  } else if (addr >= APU_PULSE2 && addr < APU_PULSE2_END) {
+    val = pulse_read(&apu->pulse2, addr - APU_PULSE2);
+
+  } else if (addr >= APU_TRIANGLE && addr < APU_TRIANGLE_END) {
+    val = triangle_read(&apu->triangle, addr - APU_TRIANGLE);
+
+  } else if (addr >= APU_NOISE && addr < APU_NOISE_END) {
+    val = noise_read(&apu->noise, addr - APU_NOISE);
+
+  } else if (addr >= APU_DMC && addr < APU_DMC_END) {
+    val = dmc_read(&apu->dmc, addr - APU_DMC);
+
+  } else if (addr == APU_STATUS) {
     val |= (apu->status.dmc & 1) << 4;
     val |= (apu->status.noise & 1) << 3;
     val |= (apu->status.triangle & 1) << 2;
     val |= (apu->status.pulse1 & 1) << 1;
     val |= (apu->status.pulse2 & 1) << 0;
-    break;
-  case 21:
+
+  } else if (addr == APU_FRAME_COUNTER) {
     val |= (apu->frame_counter.mode & 1) << 7;
     val |= (apu->frame_counter.irq_inhibit & 1) << 6;
-    break;
   }
 
   return val;
@@ -229,48 +225,52 @@ byte apu_read(APU * apu, byte addr) {
  * correlates with the expected read
  */
 int apu_test_io(APU * apu) {
-  for (int addr = 0; addr <= 21; ++addr) {
-    for (int val = 0; val <= 255; ++val) {
+  for (int addr = 0; addr < APU_ADDRESS_END; ++addr) {
+    for (int val = 0; val < 256; ++val) {
       int compare = val;
       apu_write(apu, addr, val);
 
       // When envelope is on, assume volume = 0
-      if ((addr == 0 || addr == 4 || addr == 12) && !(compare & 0b00010000)) {
+      // In reality it should be value of envelope, but initially it's 0
+      if ((addr == APU_PULSE1 ||
+           addr == APU_PULSE2 ||
+           addr == APU_NOISE) &&
+          !(compare & 0b00010000)) {
         compare &= 0b11110000;
       }
 
-      // Unused addresses, any write should give read = 0
-      if (addr == 9 || addr == 13) {
+      // Unused bit & bytes
+      if (addr == APU_TRIANGLE + 1) {
         compare = 0;
       }
 
-      // Partially unused, any write to upper 2 bits = 0
-      if (addr == 12) {
+      if (addr == APU_NOISE) {
         compare &= 0b00111111;
       }
 
-      // Partially unused
-      if (addr == 14) {
-        compare &= 0b10001111;
-      }
-
-      // Partially unused
-      if (addr == 15) {
-        compare &= 0b11111000;
-      }
-
-      // DMC not implemented, assume 0 for now
-      if (addr >= 16 && addr <= 19) {
+      if (addr == APU_NOISE + 1) {
         compare = 0;
       }
 
-      // Partially unused (DMC interrupt & frame interrupt not implemented yet)
-      if (addr == 20) {
+      if (addr == APU_NOISE + 2) {
+        compare &= 0b10001111;
+      }
+
+      if (addr == APU_NOISE + 3) {
+        compare &= 0b11111000;
+      }
+
+      // TODO: DMC not implemented
+      if (addr >= APU_DMC && addr < APU_DMC_END) {
+        compare = 0;
+      }
+
+      // TODO: interrupts not implemented
+      if (addr == APU_STATUS) {
         compare &= 0b00011111;
       }
 
-      // Partially unused
-      if (addr == 21) {
+      if (addr == APU_FRAME_COUNTER) {
         compare &= 0b11000000;
       }
 
