@@ -5,7 +5,7 @@
 
 typedef struct CPU CPU;
 
-CPU * cpu_new(Memory * mem);
+CPU * cpu_create(Memory * mem);
 void cpu_reset(CPU * cpu);
 void cpu_debug(CPU * cpu);
 

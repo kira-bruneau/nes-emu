@@ -11,8 +11,8 @@ struct NES {
 
 NES * nes_new(void) {
   NES * nes = g_malloc(sizeof(NES));
-  nes->mem = memory_new();
-  nes->cpu = cpu_new(nes->mem);
+  nes->mem = memory_create();
+  nes->cpu = cpu_create(nes->mem);
   return nes;
 }
 

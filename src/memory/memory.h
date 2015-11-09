@@ -1,8 +1,6 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include <stddef.h>
-
 #include "cartridge/cartridge.h"
 #include "util.h"
 
@@ -27,14 +25,11 @@
 
 typedef struct Memory Memory;
 
-Memory * memory_new(void);
+Memory * memory_create(void);
 void memory_reset(Memory * mem);
 void memory_map_cartridge(Memory * mem, Cartridge * cartridge);
 
 byte memory_read(Memory * mem, uint16_t addr);
-uint16_t memory_read16(Memory * mem, uint16_t addr);
-uint16_t memory_zero_page_read16(Memory * mem, byte addr);
 void memory_write(Memory * mem, uint16_t addr, byte val);
-void memory_write16(Memory * mem, uint16_t addr, uint16_t val);
 
 #endif

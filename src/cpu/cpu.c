@@ -8,6 +8,21 @@
 #include "opcode.h"
 #include "util.h"
 
+static void cpu_status_write(CPU * cpu, byte val);
+static byte cpu_status_read(CPU * cpu);
+
+static void cpu_memory_write(CPU * cpu, uint16_t addr, byte val);
+static byte cpu_memory_read(CPU * cpu, uint16_t addr);
+static uint16_t cpu_memory_zero_page_read16(CPU * cpu, byte addr);
+
+static void cpu_memory_write16(CPU * cpu, uint16_t val, uint16_t addr);
+static uint16_t cpu_memory_read16(CPU * cpu, uint16_t addr);
+
+static byte cpu_memory_next(CPU * cpu);
+static uint16_t cpu_memory_next16(CPU * cpu);
+
+static bool pages_differ(uint16_t orig_addr, uint16_t new_addr);
+
 /**
  * References:
  * CPU Wiki: http://wiki.nesdev.com/w/index.php/CPU
@@ -33,29 +48,7 @@ struct CPU {
   };
 };
 
-static void cpu_write_status(CPU * cpu, byte val) {
-  cpu->c = val >> 0;
-  cpu->z = val >> 1;
-  cpu->i = val >> 2;
-  cpu->d = val >> 3;
-  cpu->v = val >> 6;
-  cpu->n = val >> 7;
-}
-
-static byte cpu_read_status(CPU * cpu) {
-  byte val = 0x00;
-  val |= cpu->c << 0;
-  val |= cpu->z << 1;
-  val |= cpu->i << 2;
-  val |= cpu->d << 3;
-  val |= 1 << 4;
-  val |= 1 << 5;
-  val |= cpu->v << 6;
-  val |= cpu->n << 7;
-  return val;
-}
-
-CPU * cpu_new(Memory * mem) {
+CPU * cpu_create(Memory * mem) {
   CPU * cpu = g_malloc(sizeof(CPU));
   cpu->mem = mem;
   cpu_reset(cpu);
@@ -72,31 +65,13 @@ void cpu_reset(CPU * cpu) {
   cpu->x = 0;
   cpu->y = 0;
 
-  cpu_write_status(cpu, 0);
+  cpu_status_write(cpu, 0);
   cpu->i = 1;
-}
-
-// Obtain the next byte in memory and increment PC
-byte cpu_next_memory(CPU * cpu) {
-  byte addr = memory_read(cpu->mem, cpu->pc);
-  cpu->pc += 1;
-  return addr;
-}
-
-// Obtain the next two bytes in memory and increment PC
-uint16_t cpu_next_memory16(CPU * cpu) {
-  uint16_t addr = memory_read16(cpu->mem, cpu->pc);
-  cpu->pc += 2;
-  return addr;
-}
-
-static bool pages_differ(uint16_t orig_addr, uint16_t new_addr) {
-  return (orig_addr & 0xFF00) != (new_addr & 0xFF00);
 }
 
 // Evaluate the next instruction in the program
 void cpu_next_instr(CPU * cpu) {
-  byte opcode = cpu_next_memory(cpu);
+  byte opcode = cpu_memory_next(cpu);
   Instruction instruction = opcode_instruction[opcode];
 
   Address addr = {
@@ -114,37 +89,37 @@ void cpu_next_instr(CPU * cpu) {
     addr.val = cpu->pc++;
     break;
   case ADDR_ZERO_PAGE:
-    addr.val = cpu_next_memory(cpu);
+    addr.val = cpu_memory_next(cpu);
     break;
   case ADDR_ABSOLUTE:
-    addr.val = cpu_next_memory16(cpu);
+    addr.val = cpu_memory_next16(cpu);
     break;
   case ADDR_RELATIVE:
-    addr.val = cpu_next_memory(cpu) + cpu->pc;
+    addr.val = cpu_memory_next(cpu) + cpu->pc;
     break;
   case ADDR_ZERO_PAGE_X:
-    addr.val = (byte)(cpu_next_memory(cpu) + cpu->x);
+    addr.val = (byte)(cpu_memory_next(cpu) + cpu->x);
     break;
   case ADDR_ZERO_PAGE_Y:
-    addr.val = (byte)(cpu_next_memory(cpu) + cpu->y);
+    addr.val = (byte)(cpu_memory_next(cpu) + cpu->y);
     break;
   case ADDR_ABSOLUTE_X:
-    addr.val = cpu_next_memory16(cpu) + cpu->x;
+    addr.val = cpu_memory_next16(cpu) + cpu->x;
     page_crossed = pages_differ(addr.val - cpu->x, addr.val);
     break;
   case ADDR_ABSOLUTE_Y:
-    addr.val = cpu_next_memory16(cpu) + cpu->y;
+    addr.val = cpu_memory_next16(cpu) + cpu->y;
     page_crossed = pages_differ(addr.val - cpu->y, addr.val);
     break;
   case ADDR_INDIRECT:
-    addr.val = memory_read16(cpu->mem, cpu_next_memory16(cpu));
+    addr.val = cpu_memory_read16(cpu, cpu_memory_next16(cpu));
     break;
   case ADDR_INDIRECT_INDEXED:
-    addr.val = memory_zero_page_read16(cpu->mem, cpu_next_memory(cpu)) + cpu->y;
+    addr.val = cpu_memory_zero_page_read16(cpu, cpu_memory_next(cpu)) + cpu->y;
     page_crossed = pages_differ(addr.val - cpu->y, addr.val);
     break;
   case ADDR_INDEXED_INDIRECT:
-    addr.val = memory_zero_page_read16(cpu->mem, cpu_next_memory(cpu) + cpu->x);
+    addr.val = cpu_memory_zero_page_read16(cpu, cpu_memory_next(cpu) + cpu->x);
     break;
   }
 
@@ -156,26 +131,97 @@ void cpu_next_instr(CPU * cpu) {
 }
 
 /*
+ * Registers
+ */
+static void cpu_status_write(CPU * cpu, byte val) {
+  cpu->c = val >> 0;
+  cpu->z = val >> 1;
+  cpu->i = val >> 2;
+  cpu->d = val >> 3;
+  cpu->v = val >> 6;
+  cpu->n = val >> 7;
+}
+
+static byte cpu_status_read(CPU * cpu) {
+  byte val = 0x00;
+  val |= cpu->c << 0;
+  val |= cpu->z << 1;
+  val |= cpu->i << 2;
+  val |= cpu->d << 3;
+  val |= 1 << 4;
+  val |= 1 << 5;
+  val |= cpu->v << 6;
+  val |= cpu->n << 7;
+  return val;
+}
+
+/*
+ * Memory
+ */
+static byte cpu_memory_read(CPU * cpu, uint16_t addr) {
+  return memory_read(cpu->mem, addr);
+}
+
+static void cpu_memory_write(CPU * cpu, uint16_t addr, byte val) {
+  memory_write(cpu->mem, addr, val);
+}
+
+static uint16_t cpu_memory_read16(CPU * cpu, uint16_t addr) {
+  byte low = cpu_memory_read(cpu, addr);
+  byte high = cpu_memory_read(cpu, addr + 1);
+  return high << 8 | low;
+}
+
+static uint16_t cpu_memory_zero_page_read16(CPU * cpu, byte addr) {
+  byte low = cpu_memory_read(cpu, (byte)addr);
+  byte high = cpu_memory_read(cpu, (byte)(addr + 1));
+  return high << 8 | low;
+}
+
+static void cpu_memory_write16(CPU * cpu, uint16_t addr, uint16_t val) {
+  byte low = val;
+  byte high = val >> 8;
+  cpu_memory_write(cpu, addr, low);
+  cpu_memory_write(cpu, addr + 1, high);
+}
+
+static byte cpu_memory_next(CPU * cpu) {
+  byte addr = cpu_memory_read(cpu, cpu->pc);
+  cpu->pc += 1;
+  return addr;
+}
+
+static uint16_t cpu_memory_next16(CPU * cpu) {
+  uint16_t addr = cpu_memory_read16(cpu, cpu->pc);
+  cpu->pc += 2;
+  return addr;
+}
+
+static bool pages_differ(uint16_t orig_addr, uint16_t new_addr) {
+  return (orig_addr & 0xFF00) != (new_addr & 0xFF00);
+}
+
+/*
  * Stack operations
  */
 static void cpu_push(CPU * cpu, byte val) {
-  memory_write(cpu->mem, STACK_MIN + cpu->sp, val);
+  cpu_memory_write(cpu, STACK_MIN + cpu->sp, val);
   cpu->sp -= 1;
 }
 
 static void cpu_push16(CPU * cpu, uint16_t val) {
-  memory_write16(cpu->mem, STACK_MIN + cpu->sp - 1, val);
+  cpu_memory_write16(cpu, STACK_MIN + cpu->sp - 1, val);
   cpu->sp -= 2;
 }
 
 static byte cpu_pull(CPU * cpu) {
-  byte val = memory_read(cpu->mem, STACK_MIN + cpu->sp + 1);
+  byte val = cpu_memory_read(cpu, STACK_MIN + cpu->sp + 1);
   cpu->sp += 1;
   return val;
 }
 
 static uint16_t cpu_pull16(CPU * cpu) {
-  uint16_t val = memory_read16(cpu->mem, STACK_MIN + cpu->sp + 1);
+  uint16_t val = cpu_memory_read16(cpu, STACK_MIN + cpu->sp + 1);
   cpu->sp += 2;
   return val;
 }
@@ -211,7 +257,7 @@ static void cpu_compare(CPU * cpu, byte a, byte b) {
  */
 void cpu_adc(CPU * cpu, Address addr) {
   byte a = cpu->a;
-  byte b = memory_read(cpu->mem, addr.val);
+  byte b = cpu_memory_read(cpu, addr.val);
 
   uint16_t result = a + b + cpu->c;
   cpu->a = result;
@@ -221,7 +267,7 @@ void cpu_adc(CPU * cpu, Address addr) {
 }
 
 void cpu_and(CPU * cpu, Address addr) {
-  byte result = cpu->a & memory_read(cpu->mem, addr.val);
+  byte result = cpu->a & cpu_memory_read(cpu, addr.val);
   cpu->a = result;
   cpu_zn(cpu, result);
 }
@@ -235,10 +281,10 @@ void cpu_asl(CPU * cpu, Address addr) {
     result <<= 1;
     cpu->a = result;
   } else {
-    result = memory_read(cpu->mem, addr.val);
+    result = cpu_memory_read(cpu, addr.val);
     cpu->c = result >> 7 & 1;
     result <<= 1;
-    memory_write(cpu->mem, addr.val, result);
+    cpu_memory_write(cpu, addr.val, result);
   }
 
   cpu_zn(cpu, result);
@@ -263,7 +309,7 @@ void cpu_beq(CPU * cpu, Address addr) {
 }
 
 void cpu_bit(CPU * cpu, Address addr) {
-  byte val = memory_read(cpu->mem, addr.val);
+  byte val = cpu_memory_read(cpu, addr.val);
   cpu->z = (val & cpu->a) == 0;
   cpu->v = val >> 6 & 1;
   cpu->n = val >> 7 & 1;
@@ -331,23 +377,23 @@ void cpu_clv(CPU * cpu, Address addr) {
 }
 
 void cpu_cmp(CPU * cpu, Address addr) {
-  byte val = memory_read(cpu->mem, addr.val);
+  byte val = cpu_memory_read(cpu, addr.val);
   cpu_compare(cpu, cpu->a, val);
 }
 
 void cpu_cpx(CPU * cpu, Address addr) {
-  byte val = memory_read(cpu->mem, addr.val);
+  byte val = cpu_memory_read(cpu, addr.val);
   cpu_compare(cpu, cpu->x, val);
 }
 
 void cpu_cpy(CPU * cpu, Address addr) {
-  byte val = memory_read(cpu->mem, addr.val);
+  byte val = cpu_memory_read(cpu, addr.val);
   cpu_compare(cpu, cpu->y, val);
 }
 
 void cpu_dec(CPU * cpu, Address addr) {
-  byte result = memory_read(cpu->mem, addr.val) - 1;
-  memory_write(cpu->mem, addr.val, result);
+  byte result = cpu_memory_read(cpu, addr.val) - 1;
+  cpu_memory_write(cpu, addr.val, result);
   cpu_zn(cpu, result);
 }
 
@@ -366,14 +412,14 @@ void cpu_dey(CPU * cpu, Address addr) {
 }
 
 void cpu_eor(CPU * cpu, Address addr) {
-  byte result = cpu->a ^ memory_read(cpu->mem, addr.val);
+  byte result = cpu->a ^ cpu_memory_read(cpu, addr.val);
   cpu->a = result;
   cpu_zn(cpu, result);
 }
 
 void cpu_inc(CPU * cpu, Address addr) {
-  byte result = memory_read(cpu->mem, addr.val) + 1;
-  memory_write(cpu->mem, addr.val, result);
+  byte result = cpu_memory_read(cpu, addr.val) + 1;
+  cpu_memory_write(cpu, addr.val, result);
   cpu_zn(cpu, result);
 }
 
@@ -414,19 +460,19 @@ void cpu_jsr(CPU * cpu, Address addr) {
 }
 
 void cpu_lda(CPU * cpu, Address addr) {
-  byte val = memory_read(cpu->mem, addr.val);
+  byte val = cpu_memory_read(cpu, addr.val);
   cpu->a = val;
   cpu_zn(cpu, val);
 }
 
 void cpu_ldx(CPU * cpu, Address addr) {
-  byte val = memory_read(cpu->mem, addr.val);
+  byte val = cpu_memory_read(cpu, addr.val);
   cpu->x = val;
   cpu_zn(cpu, val);
 }
 
 void cpu_ldy(CPU * cpu, Address addr) {
-  byte val = memory_read(cpu->mem, addr.val);
+  byte val = cpu_memory_read(cpu, addr.val);
   cpu->y = val;
   cpu_zn(cpu, val);
 }
@@ -440,10 +486,10 @@ void cpu_lsr(CPU * cpu, Address addr) {
     result >>= 1;
     cpu->a = result;
   } else {
-    result = memory_read(cpu->mem, addr.val);
+    result = cpu_memory_read(cpu, addr.val);
     cpu->c = result & 1;
     result >>= 1;
-    memory_write(cpu->mem, addr.val, result);
+    cpu_memory_write(cpu, addr.val, result);
   }
 
   cpu_zn(cpu, result);
@@ -455,7 +501,7 @@ void cpu_nop(CPU * cpu, Address addr) {
 }
 
 void cpu_ora(CPU * cpu, Address addr) {
-  byte result = cpu->a | memory_read(cpu->mem, addr.val);
+  byte result = cpu->a | cpu_memory_read(cpu, addr.val);
   cpu->a = result;
   cpu_zn(cpu, result);
 }
@@ -466,8 +512,8 @@ void cpu_pha(CPU * cpu, Address addr) {
 }
 
 void cpu_php(CPU * cpu, Address addr) {
-  cpu_push(cpu, cpu_read_status(cpu));
   (void)addr;
+  cpu_push(cpu, cpu_status_read(cpu));
 }
 
 void cpu_pla(CPU * cpu, Address addr) {
@@ -478,8 +524,8 @@ void cpu_pla(CPU * cpu, Address addr) {
 }
 
 void cpu_plp(CPU * cpu, Address addr) {
-  cpu_write_status(cpu, cpu_pull(cpu));
   (void)addr;
+  cpu_status_write(cpu, cpu_pull(cpu));
 }
 
 void cpu_rol(CPU * cpu, Address addr) {
@@ -492,11 +538,11 @@ void cpu_rol(CPU * cpu, Address addr) {
     result = result << 1 | c;
     cpu->a = result;
   } else {
-    result = memory_read(cpu->mem, addr.val);
+    result = cpu_memory_read(cpu, addr.val);
     c = cpu->c;
     cpu->c = result >> 7 & 1;
     result = result << 1 | c;
-    memory_write(cpu->mem, addr.val, result);
+    cpu_memory_write(cpu, addr.val, result);
   }
 
   cpu_zn(cpu, result);
@@ -512,11 +558,11 @@ void cpu_ror(CPU * cpu, Address addr) {
     result = result >> 1 | c << 7;
     cpu->a = result;
   } else {
-    result = memory_read(cpu->mem, addr.val);
+    result = cpu_memory_read(cpu, addr.val);
     c = cpu->c;
     cpu->c = result & 1;
     result = result >> 1 | c << 7;
-    memory_write(cpu->mem, addr.val, result);
+    cpu_memory_write(cpu, addr.val, result);
   }
 
   cpu_zn(cpu, result);
@@ -534,7 +580,7 @@ void cpu_rts(CPU * cpu, Address addr) {
 
 void cpu_sbc(CPU * cpu, Address addr) {
   byte a = cpu->a;
-  byte b = memory_read(cpu->mem, addr.val);
+  byte b = cpu_memory_read(cpu, addr.val);
 
   int16_t result = a - b - (1 - cpu->c);
   cpu->a = result;
@@ -559,15 +605,15 @@ void cpu_sei(CPU * cpu, Address addr) {
 }
 
 void cpu_sta(CPU * cpu, Address addr) {
-  memory_write(cpu->mem, addr.val, cpu->a);
+  cpu_memory_write(cpu, addr.val, cpu->a);
 }
 
 void cpu_stx(CPU * cpu, Address addr) {
-  memory_write(cpu->mem, addr.val, cpu->x);
+  cpu_memory_write(cpu, addr.val, cpu->x);
 }
 
 void cpu_sty(CPU * cpu, Address addr) {
-  memory_write(cpu->mem, addr.val, cpu->y);
+  cpu_memory_write(cpu, addr.val, cpu->y);
 }
 
 void cpu_tax(CPU * cpu, Address addr) {
@@ -747,36 +793,36 @@ static int debug_addr_accumulator(CPU * cpu, char * buffer, Instruction instruct
 
 static int debug_addr_immediate(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte val = memory_read(cpu->mem, cpu->pc + 1);
+  byte val = cpu_memory_read(cpu, cpu->pc + 1);
 
   return sprintf(buffer, "%02X     %s #$%02X", val, name, val);
 }
 
 static int debug_addr_zero_page(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte addr = memory_read(cpu->mem, cpu->pc + 1);
-  byte val = memory_read(cpu->mem, addr);
+  byte addr = cpu_memory_read(cpu, cpu->pc + 1);
+  byte val = cpu_memory_read(cpu, addr);
 
   return sprintf(buffer, "%02X     %s $%02X = %02X", addr, name, addr, val);
 }
 
 static int debug_addr_absolute(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte addr_low = memory_read(cpu->mem, cpu->pc + 1);
-  byte addr_high = memory_read(cpu->mem, cpu->pc + 2);
+  byte addr_low = cpu_memory_read(cpu, cpu->pc + 1);
+  byte addr_high = cpu_memory_read(cpu, cpu->pc + 2);
   uint16_t addr = addr_high << 8 | addr_low;
 
   if (instruction == INSTR_JMP || instruction == INSTR_JSR) {
     return sprintf(buffer, "%02X %02X  %s $%04X", addr_low, addr_high, name, addr);
   } else {
-    byte val = memory_read(cpu->mem, addr);
+    byte val = cpu_memory_read(cpu, addr);
     return sprintf(buffer, "%02X %02X  %s $%04X = %02X", addr_low, addr_high, name, addr, val);
   }
 }
 
 static int debug_addr_relative(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte offset = memory_read(cpu->mem, cpu->pc + 1);
+  byte offset = cpu_memory_read(cpu, cpu->pc + 1);
   uint16_t addr = cpu->pc + 2 + offset;
 
   return sprintf(buffer, "%02X     %s $%04X", offset, name, addr);
@@ -784,78 +830,78 @@ static int debug_addr_relative(CPU * cpu, char * buffer, Instruction instruction
 
 static int debug_addr_zero_page_x(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte offset = memory_read(cpu->mem, cpu->pc + 1);
+  byte offset = cpu_memory_read(cpu, cpu->pc + 1);
   byte addr = offset + cpu->x;
-  byte val = memory_read(cpu->mem, addr);
+  byte val = cpu_memory_read(cpu, addr);
 
   return sprintf(buffer, "%02X     %s $%02X,X @ %02X = %02X", offset, name, offset, addr, val);
 }
 
 static int debug_addr_zero_page_y(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte offset = memory_read(cpu->mem, cpu->pc + 1);
+  byte offset = cpu_memory_read(cpu, cpu->pc + 1);
   byte addr = offset + cpu->y;
-  byte val = memory_read(cpu->mem, addr);
+  byte val = cpu_memory_read(cpu, addr);
 
   return sprintf(buffer, "%02X     %s $%02X,Y @ %02X = %02X", offset, name, offset, addr, val);
 }
 
 static int debug_addr_absolute_x(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte offset_low = memory_read(cpu->mem, cpu->pc + 1);
-  byte offset_high = memory_read(cpu->mem, cpu->pc + 2);
+  byte offset_low = cpu_memory_read(cpu, cpu->pc + 1);
+  byte offset_high = cpu_memory_read(cpu, cpu->pc + 2);
   uint16_t offset = offset = offset_high << 8 | offset_low;
   uint16_t addr = offset + cpu->x;
-  byte val = memory_read(cpu->mem, addr);
+  byte val = cpu_memory_read(cpu, addr);
 
   return sprintf(buffer, "%02X %02X  %s $%04X,X @ %04X = %02X", offset_low, offset_high, name, offset, addr, val);
 }
 
 static int debug_addr_absolute_y(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte offset_low = memory_read(cpu->mem, cpu->pc + 1);
-  byte offset_high = memory_read(cpu->mem, cpu->pc + 2);
+  byte offset_low = cpu_memory_read(cpu, cpu->pc + 1);
+  byte offset_high = cpu_memory_read(cpu, cpu->pc + 2);
   uint16_t offset = offset_high << 8 | offset_low;
   uint16_t addr = offset + cpu->y;
-  byte val = memory_read(cpu->mem, addr);
+  byte val = cpu_memory_read(cpu, addr);
 
   return sprintf(buffer, "%02X %02X  %s $%04X,Y @ %04X = %02X", offset_low, offset_high, name, offset, addr, val);
 }
 
 static int debug_addr_indirect(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte addr_addr_low = memory_read(cpu->mem, cpu->pc + 1);
-  byte addr_addr_high = memory_read(cpu->mem, cpu->pc + 2);
+  byte addr_addr_low = cpu_memory_read(cpu, cpu->pc + 1);
+  byte addr_addr_high = cpu_memory_read(cpu, cpu->pc + 2);
   uint16_t addr_addr = addr_addr_high << 8 | addr_addr_low;
-  uint16_t addr = memory_read16(cpu->mem, addr_addr);
+  uint16_t addr = cpu_memory_read16(cpu, addr_addr);
 
   return sprintf(buffer, "%02X %02X  %s ($%04X) = %04X", addr_addr_low, addr_addr_high, name, addr_addr, addr);
 }
 
 static int debug_addr_indirect_indexed(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte addr_addr = memory_read(cpu->mem, cpu->pc + 1);
-  uint16_t offset = memory_zero_page_read16(cpu->mem, addr_addr);
+  byte addr_addr = cpu_memory_read(cpu, cpu->pc + 1);
+  uint16_t offset = cpu_memory_zero_page_read16(cpu, addr_addr);
   uint16_t addr = offset + cpu->y;
-  byte val = memory_read(cpu->mem, addr);
+  byte val = cpu_memory_read(cpu, addr);
 
   return sprintf(buffer, "%02X     %s ($%02X),Y = %04X @ %04X = %02X", addr_addr, name, addr_addr, offset, addr, val);
 }
 
 static int debug_addr_indexed_indirect(CPU * cpu, char * buffer, Instruction instruction) {
   const char * name = instruction_name[instruction];
-  byte offset = memory_read(cpu->mem, cpu->pc + 1);
+  byte offset = cpu_memory_read(cpu, cpu->pc + 1);
   byte addr_addr = offset + cpu->x;
-  uint16_t addr = memory_zero_page_read16(cpu->mem, addr_addr);
-  byte val = memory_read(cpu->mem, addr);
+  uint16_t addr = cpu_memory_zero_page_read16(cpu, addr_addr);
+  byte val = cpu_memory_read(cpu, addr);
 
   return sprintf(buffer, "%02X     %s ($%02X,X) @ %02X = %04X = %02X", offset, name, offset, addr_addr, addr, val);
 }
 
 void cpu_debug_instr(CPU * cpu, char * buffer) {
-  int i = sprintf(buffer, "%04X  %02X ", cpu->pc, memory_read(cpu->mem, cpu->pc));
+  int i = sprintf(buffer, "%04X  %02X ", cpu->pc, cpu_memory_read(cpu, cpu->pc));
 
-  byte opcode = memory_read(cpu->mem, cpu->pc);
+  byte opcode = cpu_memory_read(cpu, cpu->pc);
   Instruction instruction = opcode_instruction[opcode];
   AdressingMode adressing_mode = opcode_addressing_mode[opcode];
 
@@ -885,7 +931,7 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
 
   i += sprintf(buffer + i,
                "A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%3d",
-               cpu->a, cpu->x, cpu->y, cpu_read_status(cpu) & 0xEF, cpu->sp, ppu_cycle);
+               cpu->a, cpu->x, cpu->y, cpu_status_read(cpu) & 0xEF, cpu->sp, ppu_cycle);
 
   // TODO: Mising SL - the scanline, I don't fully understand it
 }
