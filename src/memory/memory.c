@@ -9,34 +9,34 @@ struct Memory {
 
 Memory * memory_create(void) {
   Memory * mem = g_malloc(sizeof(Memory));
-  mem->ram = g_malloc0(RAM_SIZE);
   mem->cartridge = NULL;
+  mem->ram = g_malloc0(MEMORY_RAM_SIZE);
   return mem;
 }
 
 void memory_reset(Memory * mem) {
-  memset(mem->ram, 0, RAM_SIZE);
+  memset(mem->ram, 0, MEMORY_RAM_SIZE);
 }
 
 void memory_map_cartridge(Memory * mem, Cartridge * cartridge) {
   mem->cartridge = cartridge;
+  memset(mem->ram, 0, MEMORY_RAM_SIZE);
 }
 
 byte memory_read(Memory * mem, uint16_t addr) {
-  if (addr < RAM_MAX) {
-    // Obtain value from first mirror in RAM
-    return mem->ram[addr % RAM_SIZE];
-  } else if (addr > ROM_MIN && mem->cartridge != NULL) {
-    // Obtain value from cartridge ROM
-    return cartridge_read(mem->cartridge, addr - ROM_MIN);
+  if (addr < MEMORY_RAM_END) {
+    return mem->ram[addr % MEMORY_RAM_SIZE];
+
+  } else if (addr > MEMORY_ROM && mem->cartridge != NULL) {
+    return cartridge_read(mem->cartridge, addr - MEMORY_ROM);
   }
 
   return 0;
 }
 
 void memory_write(Memory * mem, uint16_t addr, byte val) {
-  if (addr < RAM_MAX) {
-    // Write value to first mirror in RAM
-    mem->ram[addr % RAM_SIZE] = val;
+  if (addr < MEMORY_RAM_END) {
+    mem->ram[addr % MEMORY_RAM_SIZE] = val;
+
   }
 }

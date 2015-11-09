@@ -205,23 +205,23 @@ static bool pages_differ(uint16_t orig_addr, uint16_t new_addr) {
  * Stack operations
  */
 static void cpu_push(CPU * cpu, byte val) {
-  cpu_memory_write(cpu, STACK_MIN + cpu->sp, val);
+  cpu_memory_write(cpu, MEMORY_STACK + cpu->sp, val);
   cpu->sp -= 1;
 }
 
 static void cpu_push16(CPU * cpu, uint16_t val) {
-  cpu_memory_write16(cpu, STACK_MIN + cpu->sp - 1, val);
+  cpu_memory_write16(cpu, MEMORY_STACK + cpu->sp - 1, val);
   cpu->sp -= 2;
 }
 
 static byte cpu_pull(CPU * cpu) {
-  byte val = cpu_memory_read(cpu, STACK_MIN + cpu->sp + 1);
+  byte val = cpu_memory_read(cpu, MEMORY_STACK + cpu->sp + 1);
   cpu->sp += 1;
   return val;
 }
 
 static uint16_t cpu_pull16(CPU * cpu) {
-  uint16_t val = cpu_memory_read16(cpu, STACK_MIN + cpu->sp + 1);
+  uint16_t val = cpu_memory_read16(cpu, MEMORY_STACK + cpu->sp + 1);
   cpu->sp += 2;
   return val;
 }

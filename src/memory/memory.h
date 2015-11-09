@@ -10,18 +10,20 @@
  * NesDev: http://wiki.nesdev.com/w/index.php/CPU_memory_map
  */
 
-#define RAM_MIN 0x0000
-#define RAM_MAX 0x2000
-#define RAM_SIZE 0x0800
+#define MEMORY_RAM 0x0000
+#define MEMORY_RAM_END 0x2000
+#define MEMORY_RAM_SIZE 0x0800
 
-#define ZERO_PAGE_MIN 0x0000
-#define ZERO_PAGE_MAX 0x0100
+#define MEMORY_STACK 0x0100
+#define MEMORY_STACK_END 0x0200
 
-#define STACK_MIN 0x0100
-#define STACK_MAX 0x0200
+#define MEMORY_WAVEFORMS 0x4000
+#define MEMORY_WAVEFORMS_END 0x4014
+#define MEMORY_APU_STATUS 0x4000
+#define MEMORY_APU_FRAME_COUNTER 0x4014
 
-#define ROM_MIN 0x8000
-#define ROM_MAX 0xFFFF
+#define MEMORY_ROM 0x8000
+#define MEMORY_ROM_END 0xFFFF
 
 typedef struct Memory Memory;
 
