@@ -3,6 +3,19 @@
 #include <stdio.h>
 #include <string.h>
 
+struct Cartridge {
+  byte * prg_rom;
+  byte * chr_rom;
+
+  byte prg_rom_size;
+  byte chr_rom_size;
+
+  byte mapper;
+
+  Mirror mirror : 2;
+  bool prg_ram : 1;
+};
+
 static byte nes_magic[] = {'N', 'E', 'S', 0x1A};
 
 typedef struct NESHeader {
@@ -27,7 +40,7 @@ typedef struct NESHeader {
   byte zero[7];
 } NESHeader;
 
-Cartridge * cartridge_new(GFile * rom_file) {
+Cartridge * cartridge_create(GFile * rom_file) {
   Cartridge * cartridge = g_malloc(sizeof(Cartridge));
 
   GInputStream * stream = (GInputStream *)g_file_read(rom_file, NULL, NULL);

@@ -104,7 +104,7 @@ int main() {
     return 0;
   }
 
-  Cartridge * cartridge = cartridge_new(rom_file);
+  Cartridge * cartridge = cartridge_create(rom_file);
   g_object_unref(rom_file);
 
   NES * nes = nes_new();
