@@ -1,11 +1,10 @@
 #ifndef CPU_H
 #define CPU_H
 
-#include "memory/memory.h"
-
+typedef struct NES NES;
 typedef struct CPU CPU;
 
-CPU * cpu_create(Memory * mem);
+CPU * cpu_create(NES * mem);
 void cpu_reset(CPU * cpu);
 void cpu_debug(CPU * cpu);
 

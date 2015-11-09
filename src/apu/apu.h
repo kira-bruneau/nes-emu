@@ -3,6 +3,7 @@
 
 #include "util.h"
 
+typedef struct NES NES;
 typedef struct APU APU;
 
 typedef enum {
@@ -29,7 +30,7 @@ typedef enum {
   APU_ADDRESS_END
 } APUAddress;
 
-APU * apu_create();
+APU * apu_create(NES * nes);
 void apu_destroy(APU * apu);
 
 void apu_tick(APU * apu);

@@ -107,7 +107,7 @@ int main() {
   Cartridge * cartridge = cartridge_create(rom_file);
   g_object_unref(rom_file);
 
-  NES * nes = nes_new();
+  NES * nes = nes_create();
   nes_load(nes, cartridge);
   return 0;
 }

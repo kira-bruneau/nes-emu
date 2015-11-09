@@ -18,7 +18,7 @@ int render_clock;
 void render_init(GLFWwindow * w) {
   window = w;
 
-  apu = apu_create();
+  apu = apu_create(NULL);
   audio = audio_create(apu);
   audio_start(audio);
 

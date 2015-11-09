@@ -25,11 +25,11 @@
 #define MEMORY_ROM 0x8000
 #define MEMORY_ROM_END 0xFFFF
 
+typedef struct NES NES;
 typedef struct Memory Memory;
 
-Memory * memory_create(void);
+Memory * memory_create(NES * nes);
 void memory_reset(Memory * mem);
-void memory_map_cartridge(Memory * mem, Cartridge * cartridge);
 
 byte memory_read(Memory * mem, uint16_t addr);
 void memory_write(Memory * mem, uint16_t addr, byte val);

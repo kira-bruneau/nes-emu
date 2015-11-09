@@ -2,11 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "nes.h"
 #include "apu.h"
-
-// APU has tight coupling with sub components
-// I could put all this code in apu.c,
-// but I prefer to keep the seperation
 #include "pulse.c"
 #include "triangle.c"
 #include "noise.c"
@@ -20,6 +17,8 @@
  */
 
 struct APU {
+  NES * nes;
+
   Pulse pulse1;
   Pulse pulse2;
   Triangle triangle;
@@ -46,9 +45,10 @@ struct APU {
   } frame_counter;
 };
 
-APU * apu_create() {
+APU * apu_create(NES * nes) {
   // Set everything to zero for now
   APU * apu = calloc(1, sizeof(APU));
+  apu->nes = nes;
 
   apu->status.pulse1 = 0;
   pulse_init(&apu->pulse1, 0);

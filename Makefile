@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -g -I./src
 
 MAIN_SRCS = main clock ui/render ui/events ui/audio apu/apu
-LOADER_SRCS = loader nes cpu/cpu memory/memory cartridge/cartridge
+LOADER_SRCS = loader nes cpu/cpu apu/apu memory/memory cartridge/cartridge
 PKGCONFIG = glfw3 gl glib-2.0 gio-2.0 portaudio-2.0
 
 BINDIR = bin

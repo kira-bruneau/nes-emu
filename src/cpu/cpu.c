@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include "nes.h"
 #include "cpu.h"
 #include "opcode.h"
 #include "util.h"
@@ -31,7 +32,7 @@ static bool pages_differ(uint16_t orig_addr, uint16_t new_addr);
  */
 
 struct CPU {
-  Memory * mem;
+  NES * nes;
   int clock;
 
   uint16_t pc;
@@ -48,9 +49,9 @@ struct CPU {
   };
 };
 
-CPU * cpu_create(Memory * mem) {
+CPU * cpu_create(NES * nes) {
   CPU * cpu = g_malloc(sizeof(CPU));
-  cpu->mem = mem;
+  cpu->nes = nes;
   cpu_reset(cpu);
   return cpu;
 }
@@ -159,11 +160,11 @@ static byte cpu_status_read(CPU * cpu) {
  * Memory
  */
 static byte cpu_memory_read(CPU * cpu, uint16_t addr) {
-  return memory_read(cpu->mem, addr);
+  return memory_read(cpu->nes->mem, addr);
 }
 
 static void cpu_memory_write(CPU * cpu, uint16_t addr, byte val) {
-  memory_write(cpu->mem, addr, val);
+  memory_write(cpu->nes->mem, addr, val);
 }
 
 static uint16_t cpu_memory_read16(CPU * cpu, uint16_t addr) {
@@ -438,7 +439,7 @@ void cpu_iny(CPU * cpu, Address addr) {
 }
 
 void cpu_jmp(CPU * cpu, Address addr) {
-  // This is a hack to pass the test case untill I figure out what is wrong
+  // TOOD: This is a hack to pass the test case untill I figure out what is wrong
   if (addr.val == 0xA900) {
     addr.val = 0x0300;
   }
@@ -970,7 +971,7 @@ bool cpu_debug_goto(CPU * cpu, const char * buffer) {
 bool cpu_debug_reset(CPU * cpu, const char * buffer) {
   (void)buffer;
   cpu_reset(cpu);
-  memory_reset(cpu->mem);
+  memory_reset(cpu->nes->mem);
   printf("Reset to initial state\n");
   return true;
 }
