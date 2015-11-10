@@ -4,8 +4,6 @@
 #include <glib.h>
 
 #include "ui.h"
-#include "video.h"
-#include "audio.h"
 #include "events.h"
 #include "clock.h"
 
@@ -14,73 +12,75 @@
 #define WINDOW_HEIGHT 240 * SCALE
 #define FRAME_RATE 60
 
-struct UI {
-  NES * nes;
-  Video * video;
-  Audio * audio;
-};
+void ui_init(UI * ui) {
+  nes_init(&ui->nes);
+  video_init(&ui->video);
+  ui->audio = audio_create(&ui->nes.apu);
+}
 
-int ui_init(void) {
-  if (glfwInit() == GL_FALSE) {
-    return 0;
+void ui_deinit(UI * ui) {
+  if (ui->audio) {
+    audio_destroy(ui->audio);
   }
-  
-  if (!audio_init()) {
-    return 0;
-  }
-  
-  return 1;
 }
 
-void ui_terminate(void) {
-  glfwTerminate();
-  audio_terminate();
-}
+int ui_run(UI * ui, Cartridge * cartridge) {
+  nes_load(&ui->nes, cartridge);
 
-UI * ui_create(NES * nes) {
-  UI * ui = g_malloc(sizeof(UI));
-  ui->nes = nes;
-  ui->video = video_create();
-  ui->audio = audio_create(&nes->apu);
-  return ui;
-}
+  GLFWwindow * window = glfwCreateWindow(
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT,
+    "NES Emulator",
+    NULL, NULL
+  );
 
-void ui_destroy(UI * ui) {
-  video_destroy(ui->video);
-  audio_destroy(ui->audio);
-  g_free(ui);
-}
-
-int ui_run(UI * ui) {
-  GLFWwindow * window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "NES Emulator", NULL, NULL);
   if (!window) {
     return 0;
   }
 
   glfwSetKeyCallback(window, event_keypress);
   glfwMakeContextCurrent(window);
-  audio_start(ui->audio);
+
+  if (ui->audio) {
+    audio_start(ui->audio);
+  }
 
   int render_clock = 0;
+  int apu_timer = 0;
+  
   while (!glfwWindowShouldClose(window)) {
     int cpu_cycles = frequency_scale(CPU_FREQUENCY / FRAME_RATE, render_clock);
     while (cpu_cycles-- != 0) {
-      cpu_next_instr(&ui->nes->cpu);
+      cpu_next_instr(&ui->nes.cpu);
+      
+      int ppu_cycles = 3;
+      while (ppu_cycles-- != 0) {
+        /* ppu_tick(&ui->nes.ppu); */
+      }
+
+      if (apu_timer != 0) {
+        apu_timer--;
+      } else {
+        apu_timer = 1;
+        apu_tick(&ui->nes.apu);
+      }
     }
 
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-
     glViewport(0, 0, width, height);
-    glClear(GL_COLOR_BUFFER_BIT);
-    video_loop(ui->video);
-    
+
+    video_render(&ui->video);
+
     glfwSwapBuffers(window);
     glfwPollEvents();
-    
     render_clock++;
   }
 
+  if (ui->audio) {
+    audio_stop(ui->audio);
+  }
+  
   glfwDestroyWindow(window);
   return 1;
 }

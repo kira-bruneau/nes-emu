@@ -2,9 +2,11 @@
 #define RENDER_H
 
 typedef struct Video Video;
+struct Video {
+  /* PPU * ppu; */
+};
 
-Video * video_create(void);
-void video_destroy(Video * video);
-void video_loop(Video * video);
+void video_init(Video * video);
+void video_render(Video * video);
 
 #endif

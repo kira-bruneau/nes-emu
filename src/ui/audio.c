@@ -6,14 +6,12 @@
 #include <glib.h>
 
 #include "audio.h"
-#include "clock.h"
 
 #define SAMPLE_RATE 44100
 
 struct Audio {
   PaStream * stream;
   APU * apu;
-  int sample_clock;
 };
 
 static int audio_callback(const void * input_buffer,
@@ -25,7 +23,6 @@ static int audio_callback(const void * input_buffer,
   (void)input_buffer;
   (void)time_info;
   (void)status_flags;
-  (void)user_data;
 
   float * out = (float *)output_buffer;
   Audio * audio = (Audio *)user_data;
@@ -33,24 +30,9 @@ static int audio_callback(const void * input_buffer,
   unsigned long i = 0;
   for (i = 0; i < frames_per_buffer; ++i) {
     *out++ = apu_sample(audio->apu);
-
-    int apu_cycles = frequency_scale(APU_FREQUENCY / SAMPLE_RATE, audio->sample_clock);
-    while (apu_cycles-- != 0) {
-      apu_tick(audio->apu);
-    }
-
-    audio->sample_clock++;
   }
 
   return 0;
-}
-
-int audio_init(void) {
-  return Pa_Initialize() == paNoError;
-}
-
-void audio_terminate(void) {
-  Pa_Terminate();
 }
 
 Audio * audio_create(APU * apu) {

@@ -2,13 +2,18 @@
 #define UI_H
 
 #include "nes.h"
+#include "video.h"
+#include "audio.h"
 
 typedef struct UI UI;
+struct UI {
+  NES nes;
+  Video video;
+  Audio * audio;
+};
 
-int ui_init(void);
-void ui_terminate(void);
-UI * ui_create(NES * nes);
-void ui_destroy(UI * ui);
-int ui_run(UI * ui);
+void ui_init(UI * ui);
+void ui_deinit(UI * ui);
+int ui_run(UI * ui, Cartridge * cartridge);
 
 #endif

@@ -1,8 +1,10 @@
-#include <glib.h>
-#include <gio/gio.h>
-
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <glib.h>
+#include <gio/gio.h>
+#include <GLFW/glfw3.h>
+#include <portaudio.h>
 
 #include "nes.h"
 #include "ui/ui.h"
@@ -109,17 +111,18 @@ int main(void) {
   Cartridge * cartridge = cartridge_create(rom_file);
   g_object_unref(rom_file);
 
-  NES nes;
-  nes_init(&nes);
-  nes_load(&nes, cartridge);
-
-  if (!ui_init()) {
+  if (!glfwInit()) {
     return 1;
   }
 
-  UI * ui = ui_create(&nes);
-  ui_run(ui);
-  ui_destroy(ui);
-  ui_terminate();
+  Pa_Initialize();
+
+  UI ui;
+  ui_init(&ui);
+  ui_run(&ui, cartridge);
+  ui_deinit(&ui);
+
+  Pa_Terminate();
+  glfwTerminate();
   return 0;
 }
