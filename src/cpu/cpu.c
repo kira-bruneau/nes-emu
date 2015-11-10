@@ -669,115 +669,115 @@ void cpu_tya(CPU * cpu, Address addr) {
 void cpu_ahx(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_alr(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_anc(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_arr(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_axs(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_dcp(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_isc(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_las(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_lax(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_rla(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_rra(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_sax(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_shx(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_shy(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_slo(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_sre(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_stp(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_tas(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 void cpu_xaa(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  printf("STUB\n");
+  cpu_debug(cpu);
 }
 
 /**
@@ -942,7 +942,7 @@ void cpu_debug_instr(CPU * cpu, char * buffer) {
   // TODO: Mising SL - the scanline, I don't fully understand it
 }
 
-bool cpu_debug_next(CPU * cpu, const char * buffer) {
+void cpu_debug_next(CPU * cpu, const char * buffer) {
   char * ptr;
   int num = strtol(buffer, &ptr, 0);
   if (ptr == buffer) {
@@ -956,32 +956,32 @@ bool cpu_debug_next(CPU * cpu, const char * buffer) {
     cpu_next_instr(cpu);
     num -= 1;
   }
-
-  return true;
 }
 
-bool cpu_debug_goto(CPU * cpu, const char * buffer) {
+void cpu_debug_goto(CPU * cpu, const char * buffer) {
   char * ptr;
   int addr = strtol(buffer, &ptr, 0);
   if (ptr == buffer) {
     printf("Expected address\n");
-    return true;
+    return;
   }
 
   cpu->pc = addr;
   printf("PC = $%04X\n", addr);
-  return true;
 }
 
-bool cpu_debug_reset(CPU * cpu, const char * buffer) {
+void cpu_debug_info(CPU * cpu, const char * buffer) {
+  printf("Cycles: %i, SP: %i\n", cpu->clock, cpu->sp);
+}
+
+void cpu_debug_reset(CPU * cpu, const char * buffer) {
   (void)buffer;
   cpu_reset(cpu);
   memory_reset(cpu->nes->mem);
   printf("Reset to initial state\n");
-  return true;
 }
 
-bool cpu_debug_test(CPU * cpu, const char * buffer) {
+void cpu_debug_test(CPU * cpu, const char * buffer) {
   char * ptr;
   int tolerance = strtol(buffer, &ptr, 0);
   if (ptr == buffer) {
@@ -991,7 +991,6 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
   FILE * fp = fopen("test/sub-nestest.log", "r");
   if (fp == NULL) {
     fprintf(stderr, "Failed to load test: %s\n", strerror(errno));
-    return true;
   }
 
   cpu_debug_reset(cpu, buffer);
@@ -1017,21 +1016,21 @@ bool cpu_debug_test(CPU * cpu, const char * buffer) {
 
   printf("\n");
   cpu_debug_reset(cpu, buffer);
-  return true;
 }
 
-bool cpu_debug_quit(CPU * cpu, const char * buffer) {
+void cpu_debug_quit(CPU * cpu, const char * buffer) {
   (void)cpu;
   (void)buffer;
-  return false;
+  exit(0);
 }
 
 const struct {
   const char * name;
-  bool (*action)(CPU * cpu, const char * buffer);
+  void (*action)(CPU * cpu, const char * buffer);
 } cpu_debug_commands[] = {
   {"next", cpu_debug_next},
   {"goto", cpu_debug_goto},
+  {"info", cpu_debug_info},
   {"reset", cpu_debug_reset},
   {"rs", cpu_debug_reset},
   {"test", cpu_debug_test},
@@ -1055,17 +1054,12 @@ void cpu_debug(CPU * cpu) {
 
     size_t i;
     bool valid = false;
-    bool quit = false;
     for (i = 0; i < ARRAY_LENGTH(cpu_debug_commands); ++i) {
       if (strncmp(buffer, cpu_debug_commands[i].name, len) == 0) {
-        quit = !cpu_debug_commands[i].action(cpu, params);
+        cpu_debug_commands[i].action(cpu, params);
         valid = true;
         break;
       }
-    }
-
-    if (quit) {
-      break;
     }
 
     if (!valid) {
