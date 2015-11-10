@@ -29,6 +29,7 @@ typedef struct NES NES;
 typedef struct Memory Memory;
 
 Memory * memory_create(NES * nes);
+void memory_destroy(Memory * mem);
 void memory_reset(Memory * mem);
 
 byte memory_read(Memory * mem, uint16_t addr);

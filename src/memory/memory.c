@@ -1,5 +1,7 @@
 #include <string.h>
 
+#include <glib.h>
+
 #include "nes.h"
 #include "memory.h"
 
@@ -13,6 +15,11 @@ Memory * memory_create(NES * nes) {
   mem->nes = nes;
   mem->ram = g_malloc0(MEMORY_RAM_SIZE);
   return mem;
+}
+
+void memory_destroy(Memory * mem) {
+  g_free(mem->ram);
+  g_free(mem);
 }
 
 void memory_reset(Memory * mem) {

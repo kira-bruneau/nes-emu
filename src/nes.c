@@ -11,6 +11,12 @@ NES * nes_create(void) {
   return nes;
 }
 
+void nes_destroy(NES * nes) {
+  memory_destroy(nes->mem);
+  cpu_destroy(nes->cpu);
+  apu_destroy(nes->apu);
+}
+
 void nes_load(NES * nes, Cartridge * cartridge) {
   nes->cartridge = cartridge;
   cpu_debug(nes->cpu);

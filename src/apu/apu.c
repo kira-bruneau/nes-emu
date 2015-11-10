@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <glib.h>
+
 #include "nes.h"
 #include "apu.h"
 #include "pulse.c"
@@ -47,7 +49,7 @@ struct APU {
 
 APU * apu_create(NES * nes) {
   // Set everything to zero for now
-  APU * apu = calloc(1, sizeof(APU));
+  APU * apu = g_malloc0(sizeof(APU));
   apu->nes = nes;
 
   apu->status.pulse1 = 0;
@@ -68,7 +70,7 @@ APU * apu_create(NES * nes) {
 }
 
 void apu_destroy(APU * apu) {
-  free(apu);
+  g_free(apu);
 }
 
 float apu_sample(APU * apu) {

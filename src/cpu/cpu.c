@@ -1,8 +1,9 @@
-#include <glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+
+#include <glib.h>
 
 #include "nes.h"
 #include "cpu.h"
@@ -54,6 +55,10 @@ CPU * cpu_create(NES * nes) {
   cpu->nes = nes;
   cpu_reset(cpu);
   return cpu;
+}
+
+void cpu_destroy(CPU * cpu) {
+  g_free(cpu);
 }
 
 void cpu_reset(CPU * cpu) {

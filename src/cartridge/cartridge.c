@@ -1,7 +1,9 @@
-#include "cartridge.h"
-
 #include <stdio.h>
 #include <string.h>
+
+#include <glib.h>
+
+#include "cartridge.h"
 
 struct Cartridge {
   byte * prg_rom;

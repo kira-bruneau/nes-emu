@@ -5,6 +5,7 @@ typedef struct NES NES;
 typedef struct CPU CPU;
 
 CPU * cpu_create(NES * mem);
+void cpu_destroy(CPU * cpu);
 void cpu_reset(CPU * cpu);
 
 void cpu_next_instr(CPU * cpu);

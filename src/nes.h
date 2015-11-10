@@ -15,6 +15,8 @@ struct NES {
 };
 
 NES * nes_create(void);
+void nes_destroy(NES * nes);
+
 void nes_load(NES * nes, Cartridge * cartridge);
 
 #endif

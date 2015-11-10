@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include <portaudio.h>
+#include <glib.h>
 
 #include "audio.h"
 #include "clock.h"
@@ -61,7 +62,7 @@ Audio * audio_create(APU * apu) {
         .suggestedLatency = device_info->defaultHighOutputLatency
       };
 
-      Audio * audio = malloc(sizeof(Audio));
+      Audio * audio = g_malloc(sizeof(Audio));
       if (audio != NULL) {
         audio->apu = apu;
 
@@ -78,7 +79,7 @@ Audio * audio_create(APU * apu) {
           return audio;
         }
 
-        free(audio);
+        g_free(audio);
       }
     }
 
@@ -91,7 +92,7 @@ Audio * audio_create(APU * apu) {
 void audio_destroy(Audio * audio) {
   Pa_CloseStream(audio->stream);
   Pa_Terminate();
-  free(audio);
+  g_free(audio);
 }
 
 int audio_start(Audio * audio) {
