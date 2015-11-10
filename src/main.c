@@ -41,7 +41,8 @@ static GList * find_roms(GList * rom_list, const char * dir_name) {
 /**
  * List a single ROM item for selection
  */
-static void list_rom(gpointer rom_name, gpointer user_data) {
+static void list_rom(gpointer data, gpointer user_data) {
+  char * rom_name = data;
   int * index = user_data;
   printf("%i) Play \"%s\"\n", *index, rom_name);
   *index += 1;
@@ -87,7 +88,7 @@ static GFile * select_rom(GList * rom_list) {
   return g_file_new_for_path(file_name);
 }
 
-int main() {
+int main(void) {
   const char * dir = "roms/";
 
   GList * rom_list = NULL;

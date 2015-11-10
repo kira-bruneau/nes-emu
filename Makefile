@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I./src -g #-Wall -Wextra -Wstrict-prototypes
+CFLAGS = -I./src -g -Wall -Wextra -Wstrict-prototypes
 
 SRCS = main nes clock ui/ui ui/video ui/audio ui/events cpu/cpu apu/apu memory/memory cartridge/cartridge
 PKGCONFIG = glib-2.0 gio-2.0 glfw3 gl portaudio-2.0

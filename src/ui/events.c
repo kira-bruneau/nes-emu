@@ -44,6 +44,9 @@ static Event key_to_event(int key) {
 }
 
 void event_keypress(GLFWwindow * window, int key, int scancode, int action, int mods) {
+  (void)scancode;
+  (void)mods;
+
   if (action != GLFW_PRESS) {
     return;
   }
@@ -82,5 +85,6 @@ void event_keypress(GLFWwindow * window, int key, int scancode, int action, int 
 }
 
 void event_error(int error, const char * description) {
+  (void)error;
   fputs(description, stderr);
 }

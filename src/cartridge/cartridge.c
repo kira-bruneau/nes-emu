@@ -112,5 +112,5 @@ Cartridge * cartridge_create(GFile * rom_file) {
 }
 
 uint8_t cartridge_read(Cartridge * cartridge, uint16_t addr) {
-  return cartridge->prg_rom[addr & (cartridge->prg_rom_size << 14) - 1];
+  return cartridge->prg_rom[addr % (cartridge->prg_rom_size << 14)];
 }
