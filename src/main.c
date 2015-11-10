@@ -109,16 +109,17 @@ int main(void) {
   Cartridge * cartridge = cartridge_create(rom_file);
   g_object_unref(rom_file);
 
-  NES * nes = nes_create();
-  nes_load(nes, cartridge);
+  NES nes;
+  nes_init(&nes);
+  nes_load(&nes, cartridge);
 
   if (!ui_init()) {
     return 1;
   }
 
-  UI * ui = ui_create(nes);
+  UI * ui = ui_create(&nes);
   ui_run(ui);
-
+  ui_destroy(ui);
   ui_terminate();
   return 0;
 }

@@ -4,8 +4,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include <glib.h>
-
 #include "nes.h"
 #include "cpu.h"
 #include "opcode.h"
@@ -26,40 +24,9 @@ static uint16_t cpu_memory_next16(CPU * cpu);
 
 static bool pages_differ(uint16_t orig_addr, uint16_t new_addr);
 
-/**
- * References:
- * CPU Wiki: http://wiki.nesdev.com/w/index.php/CPU
- * CPU Manual: http://users.telenet.be/kim1-6502/6502/proman.html
- * Opcodes: http://www.6502.org/tutorials/6502opcodes.html
- */
-
-struct CPU {
-  NES * nes;
-  int clock;
-
-  uint16_t pc;
-  uint8_t sp;
-  uint8_t a, x, y;
-
-  struct {
-    uint8_t c : 1; // carry
-    uint8_t z : 1; // zero
-    uint8_t i : 1; // interrupt disable
-    uint8_t d : 1; // bcd enable (ignored)
-    uint8_t v : 1; // overflow
-    uint8_t n : 1; // negative
-  };
-};
-
-CPU * cpu_create(NES * nes) {
-  CPU * cpu = g_malloc(sizeof(CPU));
+void cpu_init(CPU * cpu, NES * nes) {
   cpu->nes = nes;
   cpu_reset(cpu);
-  return cpu;
-}
-
-void cpu_destroy(CPU * cpu) {
-  g_free(cpu);
 }
 
 void cpu_reset(CPU * cpu) {
@@ -166,11 +133,11 @@ static uint8_t cpu_status_read(CPU * cpu) {
  * Memory
  */
 static uint8_t cpu_memory_read(CPU * cpu, uint16_t addr) {
-  return memory_read(cpu->nes->mem, addr);
+  return memory_read(&cpu->nes->mem, addr);
 }
 
 static void cpu_memory_write(CPU * cpu, uint16_t addr, uint8_t val) {
-  memory_write(cpu->nes->mem, addr, val);
+  memory_write(&cpu->nes->mem, addr, val);
 }
 
 static uint16_t cpu_memory_read16(CPU * cpu, uint16_t addr) {
@@ -979,7 +946,7 @@ void cpu_debug_info(CPU * cpu, const char * buffer) {
 void cpu_debug_reset(CPU * cpu, const char * buffer) {
   (void)buffer;
   cpu_reset(cpu);
-  memory_reset(cpu->nes->mem);
+  memory_reset(&cpu->nes->mem);
   printf("Reset to initial state\n");
 }
 

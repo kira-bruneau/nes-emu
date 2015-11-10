@@ -1,25 +1,11 @@
 #include <string.h>
 
-#include <glib.h>
-
 #include "nes.h"
 #include "memory.h"
 
-struct Memory {
-  NES * nes;
-  uint8_t * ram;
-};
-
-Memory * memory_create(NES * nes) {
-  Memory * mem = g_malloc(sizeof(Memory));
+void memory_init(Memory * mem, NES * nes) {
   mem->nes = nes;
-  mem->ram = g_malloc0(MEMORY_RAM_SIZE);
-  return mem;
-}
-
-void memory_destroy(Memory * mem) {
-  g_free(mem->ram);
-  g_free(mem);
+  memory_reset(mem);
 }
 
 void memory_reset(Memory * mem) {
@@ -31,13 +17,13 @@ uint8_t memory_read(Memory * mem, uint16_t addr) {
     return mem->ram[addr % MEMORY_RAM_SIZE];
 
   } else if (addr >= MEMORY_WAVEFORMS && addr < MEMORY_WAVEFORMS_END) {
-    return apu_read(mem->nes->apu, addr - MEMORY_WAVEFORMS);
+    return apu_read(&mem->nes->apu, addr - MEMORY_WAVEFORMS);
 
   } else if (addr == MEMORY_APU_STATUS) {
-    return apu_read(mem->nes->apu, APU_STATUS);
+    return apu_read(&mem->nes->apu, APU_STATUS);
 
   } else if (addr == MEMORY_APU_FRAME_COUNTER) {
-    return apu_read(mem->nes->apu, APU_FRAME_COUNTER);
+    return apu_read(&mem->nes->apu, APU_FRAME_COUNTER);
 
   } else if (addr > MEMORY_ROM && mem->nes->cartridge != NULL) {
     return cartridge_read(mem->nes->cartridge, addr - MEMORY_ROM);
@@ -51,12 +37,12 @@ void memory_write(Memory * mem, uint16_t addr, uint8_t val) {
     mem->ram[addr % MEMORY_RAM_SIZE] = val;
 
   } else if (addr >= MEMORY_WAVEFORMS && addr < MEMORY_WAVEFORMS_END) {
-    apu_write(mem->nes->apu, addr - MEMORY_WAVEFORMS, val);
+    apu_write(&mem->nes->apu, addr - MEMORY_WAVEFORMS, val);
 
   } else if (addr == MEMORY_APU_STATUS) {
-    apu_write(mem->nes->apu, APU_STATUS, val);
+    apu_write(&mem->nes->apu, APU_STATUS, val);
 
   } else if (addr == MEMORY_APU_FRAME_COUNTER) {
-    apu_write(mem->nes->apu, APU_FRAME_COUNTER, val);
+    apu_write(&mem->nes->apu, APU_FRAME_COUNTER, val);
   }
 }

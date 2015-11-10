@@ -1,30 +1,5 @@
-#include <stdbool.h>
-
 #include "noise.h"
-#include "length_table.h"
-
-/**
- * References:
- * http://wiki.nesdev.com/w/index.php/APU_Noise
- */
-
-struct Noise {
-  bool loop               : 1;
-  bool envelope_disabled  : 1;
-  uint8_t volume          : 4;
-  bool mode               : 1;
-  uint8_t period          : 4;
-  uint8_t length          : 5;
-
-  // Internal variables
-  bool envelope_reload    : 1;
-  uint8_t envelope_val    : 4;
-
-  uint16_t shift_register : 15;
-
-  uint16_t period_timer   : 12; // Must hold up to 4068
-  uint8_t length_timer    : 5;
-};
+#include "length-table.h"
 
 static uint16_t noise_timer_periods[16] = {
   4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068

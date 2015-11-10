@@ -41,7 +41,7 @@ UI * ui_create(NES * nes) {
   UI * ui = g_malloc(sizeof(UI));
   ui->nes = nes;
   ui->video = video_create();
-  ui->audio = audio_create(nes->apu);
+  ui->audio = audio_create(&nes->apu);
   return ui;
 }
 
@@ -65,7 +65,7 @@ int ui_run(UI * ui) {
   while (!glfwWindowShouldClose(window)) {
     int cpu_cycles = frequency_scale(CPU_FREQUENCY / FRAME_RATE, render_clock);
     while (cpu_cycles-- != 0) {
-      cpu_next_instr(ui->nes->cpu);
+      cpu_next_instr(&ui->nes->cpu);
     }
 
     int width, height;
