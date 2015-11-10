@@ -45,53 +45,53 @@ static int audio_callback(const void * input_buffer,
   return 0;
 }
 
+int audio_init(void) {
+  return Pa_Initialize() == paNoError;
+}
+
+void audio_terminate(void) {
+  Pa_Terminate();
+}
+
 Audio * audio_create(APU * apu) {
-  PaError err;
-
-  err = Pa_Initialize();
-  if (err == paNoError) {
-    PaDeviceIndex device = Pa_GetDefaultOutputDevice();
-    if (device != paNoDevice) {
-      const PaDeviceInfo * device_info = Pa_GetDeviceInfo(device);
-
-      PaStreamParameters output_parameters = {
-        .channelCount = 1,
-        .device = device,
-        .hostApiSpecificStreamInfo = NULL,
-        .sampleFormat = paFloat32,
-        .suggestedLatency = device_info->defaultHighOutputLatency
-      };
-
-      Audio * audio = g_malloc(sizeof(Audio));
-      if (audio != NULL) {
-        audio->apu = apu;
-
-        err = Pa_OpenStream(&audio->stream,
-                            NULL,
-                            &output_parameters,
-                            SAMPLE_RATE,
-                            paFramesPerBufferUnspecified,
-                            paNoFlag,
-                            audio_callback,
-                            audio);
-
-        if (err == paNoError) {
-          return audio;
-        }
-
-        g_free(audio);
-      }
-    }
-
-    Pa_Terminate();
+  PaDeviceIndex device = Pa_GetDefaultOutputDevice();
+  if (device == paNoDevice) {
+    return NULL;
   }
 
-  return NULL;
+  PaStreamParameters output_parameters = {
+    .channelCount = 1,
+    .device = device,
+    .hostApiSpecificStreamInfo = NULL,
+    .sampleFormat = paFloat32,
+    .suggestedLatency = Pa_GetDeviceInfo(device)->defaultHighOutputLatency
+  };
+
+  Audio * audio = g_malloc(sizeof(Audio));
+  if (!audio) {
+    return NULL;
+  }
+
+  audio->apu = apu;
+  PaError err = Pa_OpenStream(&audio->stream,
+                              NULL,
+                              &output_parameters,
+                              SAMPLE_RATE,
+                              paFramesPerBufferUnspecified,
+                              paNoFlag,
+                              audio_callback,
+                              audio);
+
+  if (err != paNoError) {
+    free(audio);
+    return NULL;
+  }
+
+  return audio;
 }
 
 void audio_destroy(Audio * audio) {
   Pa_CloseStream(audio->stream);
-  Pa_Terminate();
   g_free(audio);
 }
 
