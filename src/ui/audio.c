@@ -5,14 +5,13 @@
 #include <portaudio.h>
 
 #include "audio.h"
-#include "nes.h"
 #include "clock.h"
 
 #define SAMPLE_RATE 44100
 
 struct Audio {
   PaStream * stream;
-  NES * nes;
+  APU * apu;
   int sample_clock;
 };
 
@@ -29,15 +28,14 @@ static int audio_callback(const void * input_buffer,
 
   float * out = (float *)output_buffer;
   Audio * audio = (Audio *)user_data;
-  APU * apu = audio->nes->apu;
 
   unsigned long i = 0;
   for (i = 0; i < frames_per_buffer; ++i) {
-    *out++ = apu_sample(apu);
+    *out++ = apu_sample(audio->apu);
 
     int apu_cycles = frequency_scale(APU_FREQUENCY / SAMPLE_RATE, audio->sample_clock);
     while (apu_cycles-- != 0) {
-      apu_tick(apu);
+      apu_tick(audio->apu);
     }
 
     audio->sample_clock++;
@@ -46,7 +44,7 @@ static int audio_callback(const void * input_buffer,
   return 0;
 }
 
-Audio * audio_create(NES * nes) {
+Audio * audio_create(APU * apu) {
   PaError err;
 
   err = Pa_Initialize();
@@ -65,7 +63,7 @@ Audio * audio_create(NES * nes) {
 
       Audio * audio = malloc(sizeof(Audio));
       if (audio != NULL) {
-        audio->nes = nes;
+        audio->apu = apu;
 
         err = Pa_OpenStream(&audio->stream,
                             NULL,
