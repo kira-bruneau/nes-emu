@@ -19,5 +19,4 @@ void nes_destroy(NES * nes) {
 
 void nes_load(NES * nes, Cartridge * cartridge) {
   nes->cartridge = cartridge;
-  cpu_debug(nes->cpu);
 }

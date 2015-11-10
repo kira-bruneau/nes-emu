@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "nes.h"
+#include "ui/ui.h"
 #include "cartridge/cartridge.h"
 #include "util.h"
 
@@ -101,7 +102,7 @@ int main() {
   GFile * rom_file = select_rom(rom_list);
   g_list_free_full(rom_list, g_free);
   if (!rom_file) {
-    return 0;
+    return 1;
   }
 
   Cartridge * cartridge = cartridge_create(rom_file);
@@ -109,5 +110,14 @@ int main() {
 
   NES * nes = nes_create();
   nes_load(nes, cartridge);
+
+  if (!ui_init()) {
+    return 1;
+  }
+
+  UI * ui = ui_create(nes);
+  ui_run(ui);
+
+  ui_terminate();
   return 0;
 }
