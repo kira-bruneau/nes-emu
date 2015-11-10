@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "util.h"
 
@@ -27,7 +28,7 @@ const char * opcode_address_mode_str[] = {
 
 void addr_to_opcode() {
   int index;
-  while (true) {
+  while (1) {
     scanf("%X", &index);
     if (index < 0x00 || index > 0xff) {
       printf("Invalid input\n");
@@ -40,7 +41,7 @@ void addr_to_opcode() {
 void opcode_to_addr() {
   char buffer[255];
   while (fgets(buffer, ARRAY_LENGTH(buffer), stdin) != NULL) {
-    byte i;
+    uint8_t i;
     for (i = 0; i < 0xFF; ++i) {
       if (strncmp(buffer, opcode_str[i], 3) == 0) {
         printf("0x%02X: %s\n", i, opcode_address_mode_str[i]);

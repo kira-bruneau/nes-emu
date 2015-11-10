@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include "triangle.h"
 #include "length_table.h"
 
@@ -7,20 +9,20 @@
  */
 
 struct Triangle {
-  bool control_flag     : 1;
-  byte counter_reload   : 7;
-  uint16_t period       : 11;
-  byte length           : 5;
+  bool control_flag      : 1;
+  uint8_t counter_reload : 7;
+  uint16_t period        : 11;
+  uint8_t length         : 5;
 
   // Internal variables
-  uint16_t period_timer : 11;
-  byte phase            : 5;
-  byte length_timer     : 5;
-  bool linear_reload    : 1;
-  byte linear_timer     : 7;
+  uint16_t period_timer  : 11;
+  uint8_t phase          : 5;
+  uint8_t length_timer   : 5;
+  bool linear_reload     : 1;
+  uint8_t linear_timer   : 7;
 };
 
-static byte triangle_sequencer[32] = {
+static uint8_t triangle_sequencer[32] = {
   15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
@@ -29,7 +31,7 @@ void triangle_init(Triangle * triangle) {
   (void)triangle;
 }
 
-byte triangle_sample(Triangle * triangle) {
+uint8_t triangle_sample(Triangle * triangle) {
   // TODO: Liner counter gate
 
   if (triangle->control_flag && triangle->length_timer == 0) {
@@ -66,7 +68,7 @@ void triangle_linear_tick(Triangle * triangle) {
   }
 }
 
-void triangle_write(Triangle * triangle, byte addr, byte val) {
+void triangle_write(Triangle * triangle, uint8_t addr, uint8_t val) {
   switch (addr) {
   case 0:
     triangle->control_flag = (val >> 7) & 1;
@@ -85,8 +87,8 @@ void triangle_write(Triangle * triangle, byte addr, byte val) {
   }
 }
 
-byte triangle_read(Triangle * triangle, byte addr) {
-  byte val = 0;
+uint8_t triangle_read(Triangle * triangle, uint8_t addr) {
+  uint8_t val = 0;
 
   switch (addr) {
   case 0:

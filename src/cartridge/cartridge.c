@@ -1,45 +1,46 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <glib.h>
 
 #include "cartridge.h"
 
 struct Cartridge {
-  byte * prg_rom;
-  byte * chr_rom;
+  uint8_t * prg_rom;
+  uint8_t * chr_rom;
 
-  byte prg_rom_size;
-  byte chr_rom_size;
+  uint8_t prg_rom_size;
+  uint8_t chr_rom_size;
 
-  byte mapper;
+  uint8_t mapper;
 
   Mirror mirror : 2;
   bool prg_ram : 1;
 };
 
-static byte nes_magic[] = {'N', 'E', 'S', 0x1A};
+static uint8_t nes_magic[] = {'N', 'E', 'S', 0x1A};
 
 typedef struct NESHeader {
-  byte magic[4];
-  byte prg_rom_size;
-  byte chr_rom_size;
+  uint8_t magic[4];
+  uint8_t prg_rom_size;
+  uint8_t chr_rom_size;
 
   // Flags 6
-  byte mirror_vert  : 1;
-  byte prg_ram      : 1;
-  byte trainer      : 1;
-  byte mirror_quad  : 1;
-  byte mapper_low   : 4;
+  uint8_t mirror_vert  : 1;
+  uint8_t prg_ram      : 1;
+  uint8_t trainer      : 1;
+  uint8_t mirror_quad  : 1;
+  uint8_t mapper_low   : 4;
 
   // Flags 7
-  byte vs_unisystem : 1;
-  byte playchoice10 : 1;
-  byte version      : 2;
-  byte mapper_high  : 4;
+  uint8_t vs_unisystem : 1;
+  uint8_t playchoice10 : 1;
+  uint8_t version      : 2;
+  uint8_t mapper_high  : 4;
 
-  byte prg_ram_size;
-  byte zero[7];
+  uint8_t prg_ram_size;
+  uint8_t zero[7];
 } NESHeader;
 
 Cartridge * cartridge_create(GFile * rom_file) {
@@ -65,8 +66,8 @@ Cartridge * cartridge_create(GFile * rom_file) {
   }
 
   // Read PRG ROM data
-  byte * prg_rom;
-  byte prg_rom_size = header.prg_rom_size;
+  uint8_t * prg_rom;
+  uint8_t prg_rom_size = header.prg_rom_size;
   if (prg_rom_size != 0) {
     prg_rom = g_malloc(prg_rom_size << 14);
     g_input_stream_read(stream, prg_rom, prg_rom_size << 14, NULL, NULL);
@@ -76,7 +77,7 @@ Cartridge * cartridge_create(GFile * rom_file) {
 
   // Read CHR ROM data
   void * chr_rom;
-  byte chr_rom_size = header.chr_rom_size;
+  uint8_t chr_rom_size = header.chr_rom_size;
   if (chr_rom_size != 0) {
     chr_rom = g_malloc(chr_rom_size << 13);
     g_input_stream_read(stream, chr_rom, chr_rom_size << 13, NULL, NULL);
@@ -87,7 +88,7 @@ Cartridge * cartridge_create(GFile * rom_file) {
   g_input_stream_close(stream, NULL, NULL);
 
   // Mapper
-  byte mapper = header.mapper_high << 4 | header.mapper_low;
+  uint8_t mapper = header.mapper_high << 4 | header.mapper_low;
 
   // Mirroring
   Mirror mirror;
@@ -110,6 +111,6 @@ Cartridge * cartridge_create(GFile * rom_file) {
   return cartridge;
 }
 
-byte cartridge_read(Cartridge * cartridge, uint16_t addr) {
+uint8_t cartridge_read(Cartridge * cartridge, uint16_t addr) {
   return cartridge->prg_rom[addr & (cartridge->prg_rom_size << 14) - 1];
 }

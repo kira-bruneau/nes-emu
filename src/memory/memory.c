@@ -7,7 +7,7 @@
 
 struct Memory {
   NES * nes;
-  byte * ram;
+  uint8_t * ram;
 };
 
 Memory * memory_create(NES * nes) {
@@ -26,7 +26,7 @@ void memory_reset(Memory * mem) {
   memset(mem->ram, 0, MEMORY_RAM_SIZE);
 }
 
-byte memory_read(Memory * mem, uint16_t addr) {
+uint8_t memory_read(Memory * mem, uint16_t addr) {
   if (addr < MEMORY_RAM_END) {
     return mem->ram[addr % MEMORY_RAM_SIZE];
 
@@ -46,7 +46,7 @@ byte memory_read(Memory * mem, uint16_t addr) {
   return 0;
 }
 
-void memory_write(Memory * mem, uint16_t addr, byte val) {
+void memory_write(Memory * mem, uint16_t addr, uint8_t val) {
   if (addr < MEMORY_RAM_END) {
     mem->ram[addr % MEMORY_RAM_SIZE] = val;
 

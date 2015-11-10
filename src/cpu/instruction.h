@@ -1,8 +1,10 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "cpu.h"
-#include "util.h"
 
 typedef enum Instruction {
   INSTR_ADC , INSTR_AHX , INSTR_ALR , INSTR_ANC ,
@@ -50,7 +52,7 @@ const char * instruction_name[] = {
 
 typedef struct Address {
   uint16_t val;
-  byte null : 1;
+  bool null : 1;
 } Address;
 
 /*

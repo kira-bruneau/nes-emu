@@ -1,7 +1,7 @@
 #ifndef APU_H
 #define APU_H
 
-#include "util.h"
+#include <stdint.h>
 
 typedef struct NES NES;
 typedef struct APU APU;
@@ -35,8 +35,8 @@ void apu_destroy(APU * apu);
 
 void apu_tick(APU * apu);
 float apu_sample(APU * apu);
-void apu_write(APU * apu, APUAddress addr, byte val);
-byte apu_read(APU * apu, APUAddress addr);
+void apu_write(APU * apu, APUAddress addr, uint8_t val);
+uint8_t apu_read(APU * apu, APUAddress addr);
 
 int apu_test_io(APU * apu);
 

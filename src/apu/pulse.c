@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include "pulse.h"
 #include "length_table.h"
 
@@ -7,46 +9,46 @@
  */
 
 struct Pulse {
-  byte duty              : 2;
+  uint8_t duty           : 2;
   bool loop              : 1;
   bool envelope_disabled : 1;
-  byte volume            : 4;
+  uint8_t volume         : 4;
 
   bool sweep_enabled     : 1;
-  byte sweep_period      : 3;
+  uint8_t sweep_period   : 3;
   bool sweep_negate      : 1;
-  byte sweep_shift       : 3;
+  uint8_t sweep_shift    : 3;
 
   uint16_t period        : 11;
-  byte length            : 5;
+  uint8_t length         : 5;
 
   // Internal variables
   bool channel           : 1;
 
   bool envelope_reload   : 1;
-  byte envelope_val      : 4;
+  uint8_t envelope_val   : 4;
 
   bool sweep_reload      : 1;
-  byte sweep_timer       : 3;
+  uint8_t sweep_timer    : 3;
 
   uint16_t period_timer  : 11;
-  byte phase             : 3;
+  uint8_t phase          : 3;
 
-  byte length_timer      : 8;
+  uint8_t length_timer   : 8;
 };
 
-static byte pulse_sequencer[4][8] = {
+static uint8_t pulse_sequencer[4][8] = {
   {0, 0, 0, 0, 0, 0, 0, 1},
   {0, 0, 0, 0, 0, 0, 1, 1},
   {0, 0, 0, 0, 1, 1, 1, 1},
   {1, 1, 1, 1, 1, 1, 0, 0}
 };
 
-void pulse_init(Pulse * pulse, byte channel) {
+void pulse_init(Pulse * pulse, uint8_t channel) {
   pulse->channel = channel;
 }
 
-byte pulse_sample(Pulse * pulse) {
+uint8_t pulse_sample(Pulse * pulse) {
   if (!pulse->loop && pulse->length_timer == 0) {
     return 0;
   }
@@ -116,7 +118,7 @@ void pulse_envelope_tick(Pulse * pulse) {
   }
 }
 
-void pulse_write(Pulse * pulse, byte addr, byte val) {
+void pulse_write(Pulse * pulse, uint8_t addr, uint8_t val) {
   switch (addr) {
   case 0:
     pulse->duty = (val >> 6) & 3;
@@ -144,8 +146,8 @@ void pulse_write(Pulse * pulse, byte addr, byte val) {
   }
 }
 
-byte pulse_read(Pulse * pulse, byte addr) {
-  byte val = 0;
+uint8_t pulse_read(Pulse * pulse, uint8_t addr) {
+  uint8_t val = 0;
 
   switch (addr) {
   case 0:

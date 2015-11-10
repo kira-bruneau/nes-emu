@@ -65,11 +65,11 @@ void apu_destroy(APU * apu) {
 }
 
 float apu_sample(APU * apu) {
-  byte pulse1   = apu->status.pulse1   ? pulse_sample(&apu->pulse1)      : 0;
-  byte pulse2   = apu->status.pulse2   ? pulse_sample(&apu->pulse2)      : 0;
-  byte triangle = apu->status.triangle ? triangle_sample(&apu->triangle) : 0;
-  byte noise    = apu->status.noise    ? noise_sample(&apu->noise)       : 0;
-  byte dmc      = apu->status.dmc      ? dmc_sample(&apu->dmc)           : 0;
+  uint8_t pulse1   = apu->status.pulse1   ? pulse_sample(&apu->pulse1)      : 0;
+  uint8_t pulse2   = apu->status.pulse2   ? pulse_sample(&apu->pulse2)      : 0;
+  uint8_t triangle = apu->status.triangle ? triangle_sample(&apu->triangle) : 0;
+  uint8_t noise    = apu->status.noise    ? noise_sample(&apu->noise)       : 0;
+  uint8_t dmc      = apu->status.dmc      ? dmc_sample(&apu->dmc)           : 0;
 
   float pulse_out = 0.00752 * (pulse1 + pulse2);
   float tnd_out = 0.00851 * triangle + 0.00494 * noise + 0.00335 * dmc;
@@ -151,7 +151,7 @@ void apu_tick(APU * apu) {
   apu_frame_counter_tick(apu);
 }
 
-void apu_write(APU * apu, APUAddress addr, byte val) {
+void apu_write(APU * apu, APUAddress addr, uint8_t val) {
   if (addr >= APU_PULSE1 && addr < APU_PULSE1_END) {
     pulse_write(&apu->pulse1, addr - APU_PULSE1, val);
 
@@ -180,8 +180,8 @@ void apu_write(APU * apu, APUAddress addr, byte val) {
   }
 }
 
-byte apu_read(APU * apu, APUAddress addr) {
-  byte val = 0;
+uint8_t apu_read(APU * apu, APUAddress addr) {
+  uint8_t val = 0;
 
   if (addr >= APU_PULSE1 && addr < APU_PULSE1_END) {
     val = pulse_read(&apu->pulse1, addr - APU_PULSE1);

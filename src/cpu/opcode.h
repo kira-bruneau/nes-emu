@@ -1,11 +1,12 @@
 #ifndef OPCODE_H
 #define OPCODE_H
 
+#include <stdint.h>
+
 #include "instruction.h"
 #include "addressing-mode.h"
-#include "util.h"
 
-const byte opcode_instruction[] = {
+const uint8_t opcode_instruction[] = {
   INSTR_BRK , INSTR_ORA , INSTR_STP , INSTR_SLO ,
   INSTR_NOP , INSTR_ORA , INSTR_ASL , INSTR_SLO ,
   INSTR_PHP , INSTR_ORA , INSTR_ASL , INSTR_ANC ,
@@ -72,7 +73,7 @@ const byte opcode_instruction[] = {
   INSTR_NOP , INSTR_SBC , INSTR_INC , INSTR_ISC
 };
 
-const byte opcode_addressing_mode[] = {
+const uint8_t opcode_addressing_mode[] = {
   ADDR_IMPLIED     , ADDR_INDEXED_INDIRECT , ADDR_IMPLIED     , ADDR_INDEXED_INDIRECT ,
   ADDR_ZERO_PAGE   , ADDR_ZERO_PAGE        , ADDR_ZERO_PAGE   , ADDR_ZERO_PAGE        ,
   ADDR_IMPLIED     , ADDR_IMMEDIATE        , ADDR_ACCUMULATOR , ADDR_IMMEDIATE        ,
@@ -139,7 +140,7 @@ const byte opcode_addressing_mode[] = {
   ADDR_ABSOLUTE_X  , ADDR_ABSOLUTE_X       , ADDR_ABSOLUTE_X  , ADDR_ABSOLUTE_X
 };
 
-const byte opcode_cycles[] = {
+const uint8_t opcode_cycles[] = {
   7, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6,
   2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
   6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 4, 4, 6, 6,
@@ -158,7 +159,7 @@ const byte opcode_cycles[] = {
   2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7
 };
 
-const byte opcode_page_cross_cycles[] = {
+const uint8_t opcode_page_cross_cycles[] = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

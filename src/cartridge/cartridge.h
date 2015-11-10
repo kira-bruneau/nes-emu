@@ -1,9 +1,9 @@
 #ifndef CARTRIDGE_H
 #define CARTRIDGE_H
 
-#include <gio/gio.h>
+#include <stdint.h>
 
-#include "util.h"
+#include <gio/gio.h>
 
 typedef enum Mirror {
   MIRROR_HORIZONTAL,
@@ -14,6 +14,6 @@ typedef enum Mirror {
 typedef struct Cartridge Cartridge;
 
 Cartridge * cartridge_create(GFile * rom_file);
-byte cartridge_read(Cartridge * cartridge, uint16_t addr);
+uint8_t cartridge_read(Cartridge * cartridge, uint16_t addr);
 
 #endif

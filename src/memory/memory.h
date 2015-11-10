@@ -1,8 +1,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include "cartridge/cartridge.h"
-#include "util.h"
+#include <stdint.h>
 
 /**
  * References:
@@ -32,7 +31,7 @@ Memory * memory_create(NES * nes);
 void memory_destroy(Memory * mem);
 void memory_reset(Memory * mem);
 
-byte memory_read(Memory * mem, uint16_t addr);
-void memory_write(Memory * mem, uint16_t addr, byte val);
+uint8_t memory_read(Memory * mem, uint16_t addr);
+void memory_write(Memory * mem, uint16_t addr, uint8_t val);
 
 #endif
