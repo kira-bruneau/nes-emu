@@ -16,11 +16,8 @@
  * Mixer: http://wiki.nesdev.com/w/index.php/APU_Mixer
  */
 
-typedef struct NES NES;
 typedef struct APU APU;
 struct APU {
-  NES * nes;
-
   Pulse pulse1;
   Pulse pulse2;
   Triangle triangle;
@@ -71,7 +68,7 @@ typedef enum {
   APU_ADDRESS_END
 } APUAddress;
 
-void apu_init(APU * apu, NES * nes);
+void apu_init(APU * apu);
 void apu_reset(APU * apu);
 
 void apu_tick(APU * apu);

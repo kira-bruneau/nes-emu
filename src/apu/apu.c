@@ -4,10 +4,8 @@
 
 #include "apu.h"
 
-void apu_init(APU * apu, NES * nes) {
+void apu_init(APU * apu) {
   apu_reset(apu);
-
-  apu->nes = nes;
   pulse_init(&apu->pulse1, 0);
   pulse_init(&apu->pulse2, 1);
   triangle_init(&apu->triangle);
@@ -15,9 +13,7 @@ void apu_init(APU * apu, NES * nes) {
 }
 
 void apu_reset(APU * apu) {
-  NES * nes = apu->nes;
   memset(apu, 0, sizeof(APU));
-  apu->nes = nes;
 }
 
 float apu_sample(APU * apu) {

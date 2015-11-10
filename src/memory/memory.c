@@ -1,10 +1,28 @@
 #include <string.h>
 
-#include "nes.h"
 #include "memory.h"
 
-void memory_init(Memory * mem, NES * nes) {
-  mem->nes = nes;
+////////////////////////////////////////////////////////////////////////////////
+
+#include "nes.h"
+
+// Note: This assumes that the Memory can only exist within a NES.
+// Maybe this coupling is too strong...
+static NES * memory_nes(Memory * mem) {
+  return (NES *)((char *)mem - offsetof(struct NES, mem));
+}
+
+static Cartridge * memory_cartridge(Memory * mem) {
+  return memory_nes(mem)->cartridge;
+}
+
+static APU * memory_apu(Memory * mem) {
+  return &memory_nes(mem)->apu;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void memory_init(Memory * mem) {
   memory_reset(mem);
 }
 
@@ -17,16 +35,16 @@ uint8_t memory_read(Memory * mem, uint16_t addr) {
     return mem->ram[addr % MEMORY_RAM_SIZE];
 
   } else if (addr >= MEMORY_WAVEFORMS && addr < MEMORY_WAVEFORMS_END) {
-    return apu_read(&mem->nes->apu, addr - MEMORY_WAVEFORMS);
+    return apu_read(memory_apu(mem), addr - MEMORY_WAVEFORMS);
 
   } else if (addr == MEMORY_APU_STATUS) {
-    return apu_read(&mem->nes->apu, APU_STATUS);
+    return apu_read(memory_apu(mem), APU_STATUS);
 
   } else if (addr == MEMORY_APU_FRAME_COUNTER) {
-    return apu_read(&mem->nes->apu, APU_FRAME_COUNTER);
+    return apu_read(memory_apu(mem), APU_FRAME_COUNTER);
 
-  } else if (addr > MEMORY_ROM && mem->nes->cartridge != NULL) {
-    return cartridge_read(mem->nes->cartridge, addr - MEMORY_ROM);
+  } else if (addr > MEMORY_ROM && memory_cartridge(mem) != NULL) {
+    return cartridge_read(memory_cartridge(mem), addr - MEMORY_ROM);
   }
 
   return 0;
@@ -37,12 +55,12 @@ void memory_write(Memory * mem, uint16_t addr, uint8_t val) {
     mem->ram[addr % MEMORY_RAM_SIZE] = val;
 
   } else if (addr >= MEMORY_WAVEFORMS && addr < MEMORY_WAVEFORMS_END) {
-    apu_write(&mem->nes->apu, addr - MEMORY_WAVEFORMS, val);
+    apu_write(memory_apu(mem), addr - MEMORY_WAVEFORMS, val);
 
   } else if (addr == MEMORY_APU_STATUS) {
-    apu_write(&mem->nes->apu, APU_STATUS, val);
+    apu_write(memory_apu(mem), APU_STATUS, val);
 
   } else if (addr == MEMORY_APU_FRAME_COUNTER) {
-    apu_write(&mem->nes->apu, APU_FRAME_COUNTER, val);
+    apu_write(memory_apu(mem), APU_FRAME_COUNTER, val);
   }
 }

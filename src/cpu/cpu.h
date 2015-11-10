@@ -10,10 +10,8 @@
  * Opcodes: http://www.6502.org/tutorials/6502opcodes.html
  */
 
-typedef struct NES NES;
 typedef struct CPU CPU;
 struct CPU {
-  NES * nes;
   int clock;
 
   uint16_t pc;
@@ -30,7 +28,7 @@ struct CPU {
   };
 };
 
-void cpu_init(CPU * cpu, NES * nes);
+void cpu_init(CPU * cpu);
 void cpu_reset(CPU * cpu);
 
 void cpu_next_instr(CPU * cpu);

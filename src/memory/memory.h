@@ -24,14 +24,12 @@
 #define MEMORY_ROM 0x8000
 #define MEMORY_ROM_END 0xFFFF
 
-typedef struct NES NES;
 typedef struct Memory Memory;
 struct Memory {
-  NES * nes;
   uint8_t ram[MEMORY_RAM_SIZE];
 };
 
-void memory_init(Memory * mem, NES * nes);
+void memory_init(Memory * mem);
 void memory_reset(Memory * mem);
 
 uint8_t memory_read(Memory * mem, uint16_t addr);

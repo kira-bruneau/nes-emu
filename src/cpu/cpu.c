@@ -4,10 +4,25 @@
 #include <string.h>
 #include <errno.h>
 
-#include "nes.h"
 #include "cpu.h"
 #include "opcode.h"
 #include "array.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+#include "nes.h"
+
+// Note: This assumes that the CPU can only exist within a NES.
+// Maybe this coupling is too strong...
+static NES * cpu_nes(CPU * cpu) {
+  return (NES *)((char *)cpu - offsetof(struct NES, cpu));
+}
+
+static Memory * cpu_mem(CPU * cpu) {
+  return &cpu_nes(cpu)->mem;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static void cpu_status_write(CPU * cpu, uint8_t val);
 static uint8_t cpu_status_read(CPU * cpu);
@@ -24,8 +39,9 @@ static uint16_t cpu_memory_next16(CPU * cpu);
 
 static bool pages_differ(uint16_t orig_addr, uint16_t new_addr);
 
-void cpu_init(CPU * cpu, NES * nes) {
-  cpu->nes = nes;
+////////////////////////////////////////////////////////////////////////////////
+
+void cpu_init(CPU * cpu) {
   cpu_reset(cpu);
 }
 
@@ -133,11 +149,11 @@ static uint8_t cpu_status_read(CPU * cpu) {
  * Memory
  */
 static uint8_t cpu_memory_read(CPU * cpu, uint16_t addr) {
-  return memory_read(&cpu->nes->mem, addr);
+  return memory_read(cpu_mem(cpu), addr);
 }
 
 static void cpu_memory_write(CPU * cpu, uint16_t addr, uint8_t val) {
-  memory_write(&cpu->nes->mem, addr, val);
+  memory_write(cpu_mem(cpu), addr, val);
 }
 
 static uint16_t cpu_memory_read16(CPU * cpu, uint16_t addr) {
@@ -946,7 +962,7 @@ void cpu_debug_info(CPU * cpu, const char * buffer) {
 void cpu_debug_reset(CPU * cpu, const char * buffer) {
   (void)buffer;
   cpu_reset(cpu);
-  memory_reset(&cpu->nes->mem);
+  memory_reset(cpu_mem(cpu));
   printf("Reset to initial state\n");
 }
 
