@@ -52,19 +52,10 @@ APU * apu_create(NES * nes) {
   APU * apu = g_malloc0(sizeof(APU));
   apu->nes = nes;
 
-  apu->status.pulse1 = 0;
   pulse_init(&apu->pulse1, 0);
-
-  apu->status.pulse2 = 0;
   pulse_init(&apu->pulse2, 1);
-
-  apu->status.triangle = 0;
   triangle_init(&apu->triangle);
-
-  apu->status.noise = 1;
   noise_init(&apu->noise);
-
-  apu_test_io(apu);
 
   return apu;
 }
