@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -I./src -g #-Wall -Wextra -Wstrict-prototypes
 
-SRCS = loader nes clock ui/ui ui/video ui/audio ui/events cpu/cpu apu/apu memory/memory cartridge/cartridge
+SRCS = main nes clock ui/ui ui/video ui/audio ui/events cpu/cpu apu/apu memory/memory cartridge/cartridge
 PKGCONFIG = glib-2.0 gio-2.0 glfw3 gl portaudio-2.0
 
 BINDIR = bin
@@ -12,17 +12,17 @@ CFLAGS += $(shell pkg-config --cflags $(PKGCONFIG))
 LDFLAGS += $(shell pkg-config --libs $(PKGCONFIG))
 
 .PHONY: all
-all: loader
+all: main
 
-.PHONY: loader
-loader: bin/loader
-$(BINDIR)/loader: $(addprefix $(OBJDIR)/, $(addsuffix .o, $(SRCS)))
+.PHONY: main
+main: bin/main
+$(BINDIR)/main: $(addprefix $(OBJDIR)/, $(addsuffix .o, $(SRCS)))
 	@mkdir -p $(shell dirname $@)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 .PHONY: run
-run: loader
-	./bin/loader
+run: main
+	./bin/main
 
 -include $(addprefix $(OBJDIR)/, $(addsuffix .d, $(SRCS)))
 
