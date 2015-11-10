@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "events.h"
-#include "util.h"
+#include "array.h"
 
 typedef enum Event {
   EVENT_NONE,

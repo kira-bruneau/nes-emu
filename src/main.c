@@ -7,7 +7,7 @@
 #include "nes.h"
 #include "ui/ui.h"
 #include "cartridge/cartridge.h"
-#include "util.h"
+#include "array.h"
 
 /**
  * Find ROM files recursively in a directory

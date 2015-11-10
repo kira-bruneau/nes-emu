@@ -20,11 +20,12 @@ $(BINDIR)/main: $(addprefix $(OBJDIR)/, $(addsuffix .o, $(SRCS)))
 	@mkdir -p $(shell dirname $@)
 	$(CC) $(LDFLAGS) -o $@ $^
 
+# Include dependencies generated from 'gcc -MMD'
+-include $(addprefix $(OBJDIR)/, $(addsuffix .d, $(SRCS)))
+
 .PHONY: run
 run: main
 	./bin/main
-
--include $(addprefix $(OBJDIR)/, $(addsuffix .d, $(SRCS)))
 
 # Generic rule to build object files #
 $(OBJDIR)/%.o: $(SRCDIR)/%.c

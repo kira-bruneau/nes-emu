@@ -9,7 +9,7 @@
 #include "nes.h"
 #include "cpu.h"
 #include "opcode.h"
-#include "util.h"
+#include "array.h"
 
 static void cpu_status_write(CPU * cpu, uint8_t val);
 static uint8_t cpu_status_read(CPU * cpu);
