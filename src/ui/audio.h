@@ -3,11 +3,10 @@
 
 #include <stddef.h>
 
-#include "apu/apu.h"
-
+typedef struct NES NES;
 typedef struct Audio Audio;
 
-Audio * audio_create(APU * apu);
+Audio * audio_create(NES * nes);
 void audio_destroy(Audio * audio);
 
 int audio_start(Audio * audio);
