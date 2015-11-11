@@ -650,118 +650,123 @@ void cpu_tya(CPU * cpu, Address addr) {
 /*
  * Unoffical instructions
  */
+static void cpu_unofficial(CPU * cpu, const char * name) {
+  fprintf(stderr, "ERROR: Instruction '%s' not implemented, dropping into debug mode!\n", name);
+  cpu_debug(cpu);
+}
+
 void cpu_ahx(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "AHX");
 }
 
 void cpu_alr(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "ALR");
 }
 
 void cpu_anc(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "ANC");
 }
 
 void cpu_arr(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "ARR");
 }
 
 void cpu_axs(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "AXS");
 }
 
 void cpu_dcp(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "DCP");
 }
 
 void cpu_isc(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "ISC");
 }
 
 void cpu_las(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "LAS");
 }
 
 void cpu_lax(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "LAX");
 }
 
 void cpu_rla(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "RLA");
 }
 
 void cpu_rra(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "RRA");
 }
 
 void cpu_sax(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "SAX");
 }
 
 void cpu_shx(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "SHX");
 }
 
 void cpu_shy(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "SHY");
 }
 
 void cpu_slo(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "SLO");
 }
 
 void cpu_sre(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "SRE");
 }
 
 void cpu_stp(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "STP");
 }
 
 void cpu_tas(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "TAS");
 }
 
 void cpu_xaa(CPU * cpu, Address addr) {
   (void)cpu;
   (void)addr;
-  cpu_debug(cpu);
+  cpu_unofficial(cpu, "XAA");
 }
 
 /**
