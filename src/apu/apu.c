@@ -104,19 +104,19 @@ void apu_tick(APU * apu) {
 }
 
 void apu_write(APU * apu, APUAddress addr, uint8_t val) {
-  if (addr >= APU_PULSE1 && addr < APU_PULSE1_END) {
+  if (addr >= APU_PULSE1 && addr <= APU_PULSE1_END) {
     pulse_write(&apu->pulse1, addr - APU_PULSE1, val);
 
-  } else if (addr >= APU_PULSE2 && addr < APU_PULSE2_END) {
+  } else if (addr >= APU_PULSE2 && addr <= APU_PULSE2_END) {
     pulse_write(&apu->pulse2, addr - APU_PULSE2, val);
 
-  } else if (addr >= APU_TRIANGLE && addr < APU_TRIANGLE_END) {
+  } else if (addr >= APU_TRIANGLE && addr <= APU_TRIANGLE_END) {
     triangle_write(&apu->triangle, addr - APU_TRIANGLE, val);
 
-  } else if (addr >= APU_NOISE && addr < APU_NOISE_END) {
+  } else if (addr >= APU_NOISE && addr <= APU_NOISE_END) {
     noise_write(&apu->noise, addr - APU_NOISE, val);
 
-  } else if (addr >= APU_DMC && addr < APU_DMC_END) {
+  } else if (addr >= APU_DMC && addr <= APU_DMC_END) {
     dmc_write(&apu->dmc, addr - APU_DMC, val);
 
   } else if (addr == APU_STATUS) {
@@ -135,19 +135,19 @@ void apu_write(APU * apu, APUAddress addr, uint8_t val) {
 uint8_t apu_read(APU * apu, APUAddress addr) {
   uint8_t val = 0;
 
-  if (addr >= APU_PULSE1 && addr < APU_PULSE1_END) {
+  if (addr >= APU_PULSE1 && addr <= APU_PULSE1_END) {
     val = pulse_read(&apu->pulse1, addr - APU_PULSE1);
 
-  } else if (addr >= APU_PULSE2 && addr < APU_PULSE2_END) {
+  } else if (addr >= APU_PULSE2 && addr <= APU_PULSE2_END) {
     val = pulse_read(&apu->pulse2, addr - APU_PULSE2);
 
-  } else if (addr >= APU_TRIANGLE && addr < APU_TRIANGLE_END) {
+  } else if (addr >= APU_TRIANGLE && addr <= APU_TRIANGLE_END) {
     val = triangle_read(&apu->triangle, addr - APU_TRIANGLE);
 
-  } else if (addr >= APU_NOISE && addr < APU_NOISE_END) {
+  } else if (addr >= APU_NOISE && addr <= APU_NOISE_END) {
     val = noise_read(&apu->noise, addr - APU_NOISE);
 
-  } else if (addr >= APU_DMC && addr < APU_DMC_END) {
+  } else if (addr >= APU_DMC && addr <= APU_DMC_END) {
     val = dmc_read(&apu->dmc, addr - APU_DMC);
 
   } else if (addr == APU_STATUS) {
@@ -170,7 +170,7 @@ uint8_t apu_read(APU * apu, APUAddress addr) {
  * correlates with the expected read
  */
 int apu_test_io(APU * apu) {
-  for (int addr = 0; addr < APU_ADDRESS_END; ++addr) {
+  for (int addr = 0; addr < APU_ADDRESS_SIZE; ++addr) {
     for (int val = 0; val < 256; ++val) {
       int compare = val;
       apu_write(apu, addr, val);
@@ -206,7 +206,7 @@ int apu_test_io(APU * apu) {
       }
 
       // TODO: DMC not implemented
-      if (addr >= APU_DMC && addr < APU_DMC_END) {
+      if (addr >= APU_DMC && addr <= APU_DMC_END) {
         compare = 0;
       }
 

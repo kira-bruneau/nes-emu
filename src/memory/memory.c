@@ -31,10 +31,10 @@ void memory_reset(Memory * mem) {
 }
 
 uint8_t memory_read(Memory * mem, uint16_t addr) {
-  if (addr < MEMORY_RAM_END) {
+  if (addr <= MEMORY_RAM_END) {
     return mem->ram[addr % MEMORY_RAM_SIZE];
 
-  } else if (addr >= MEMORY_WAVEFORMS && addr < MEMORY_WAVEFORMS_END) {
+  } else if (addr >= MEMORY_WAVEFORMS && addr <= MEMORY_WAVEFORMS_END) {
     return apu_read(memory_apu(mem), addr - MEMORY_WAVEFORMS);
 
   } else if (addr == MEMORY_APU_STATUS) {
@@ -51,10 +51,10 @@ uint8_t memory_read(Memory * mem, uint16_t addr) {
 }
 
 void memory_write(Memory * mem, uint16_t addr, uint8_t val) {
-  if (addr < MEMORY_RAM_END) {
+  if (addr <= MEMORY_RAM_END) {
     mem->ram[addr % MEMORY_RAM_SIZE] = val;
 
-  } else if (addr >= MEMORY_WAVEFORMS && addr < MEMORY_WAVEFORMS_END) {
+  } else if (addr >= MEMORY_WAVEFORMS && addr <= MEMORY_WAVEFORMS_END) {
     apu_write(memory_apu(mem), addr - MEMORY_WAVEFORMS, val);
 
   } else if (addr == MEMORY_APU_STATUS) {
