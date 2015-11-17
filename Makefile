@@ -8,34 +8,43 @@ SRCS += ui/ui ui/video ui/audio ui/events
 
 PKGCONFIG = glib-2.0 gio-2.0 gmodule-2.0 glfw3 gl portaudio-2.0
 
-BINDIR = bin
-OBJDIR = obj
-SRCDIR = src
-
 CFLAGS += $(shell pkg-config --cflags $(PKGCONFIG))
 LDFLAGS += $(shell pkg-config --libs $(PKGCONFIG))
 
 .PHONY: all
-all: main
+all: main mappers
 
+# Main
 .PHONY: main
 main: bin/main
-$(BINDIR)/main: $(addprefix $(OBJDIR)/, $(addsuffix .o, $(SRCS)))
+bin/main: $(addprefix obj/, $(addsuffix .o, $(SRCS)))
 	@mkdir -p $(shell dirname $@)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) $^ -o $@
 
-# Include dependencies generated from 'gcc -MMD'
--include $(addprefix $(OBJDIR)/, $(addsuffix .d, $(SRCS)))
+# Mappers
+.PHONY: mappers
+mappers: mapper/0.so
 
-.PHONY: run
-run: main
-	./bin/main
+mapper/%.so: obj/mapper/mapper-%.o
+	@mkdir -p $(shell dirname $@)
+	$(CC) $(LDFLAGS) -shared $^ -o $@
+
+obj/mapper/mapper-%.o: src/mapper/mapper-%.c
+	@mkdir -p $(shell dirname $@)
+	$(CC) $(CFLAGS) -fPIC -MMD -c $< -o $@
 
 # Generic rule to build object files #
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+obj/%.o: src/%.c
 	@mkdir -p $(shell dirname $@)
-	$(CC) $(CFLAGS) -MMD -o $@ -c $<
+	$(CC) $(CFLAGS) -MMD -c $< -o $@
+
+# Include dependencies generated from 'gcc -MMD'
+-include $(addprefix obj/, $(addsuffix .d, $(SRCS)))
+
+.PHONY: run
+run: all
+	./bin/main
 
 .PHONY: clean
 clean:
-	rm -rf $(OBJDIR) $(BINDIR)
+	rm -rf obj bin mapper

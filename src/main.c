@@ -111,6 +111,10 @@ int main(void) {
   Cartridge * cartridge = cartridge_create(rom_file);
   g_object_unref(rom_file);
 
+  if (!cartridge) {
+    return 1;
+  }
+
   if (!glfwInit()) {
     return 1;
   }
