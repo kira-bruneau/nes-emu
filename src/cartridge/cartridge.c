@@ -1,25 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include <glib.h>
 
 #include "cartridge.h"
-
-struct Cartridge {
-  uint8_t * prg_rom;
-  uint8_t * chr_rom;
-
-  uint8_t prg_rom_size;
-  uint8_t chr_rom_size;
-
-  uint8_t mapper;
-
-  Mirror mirror : 2;
-  bool prg_ram : 1;
-};
-
-static uint8_t nes_magic[] = {'N', 'E', 'S', 0x1A};
+#include "mapper/mapper.h"
 
 typedef struct NESHeader {
   uint8_t magic[4];
@@ -43,9 +28,9 @@ typedef struct NESHeader {
   uint8_t zero[7];
 } NESHeader;
 
-Cartridge * cartridge_create(GFile * rom_file) {
-  Cartridge * cartridge = g_malloc(sizeof(Cartridge));
+static uint8_t nes_magic[] = {'N', 'E', 'S', 0x1A};
 
+Cartridge * cartridge_create(GFile * rom_file) {
   GInputStream * stream = (GInputStream *)g_file_read(rom_file, NULL, NULL);
   if (stream == NULL) {
     return NULL;
@@ -87,8 +72,8 @@ Cartridge * cartridge_create(GFile * rom_file) {
 
   g_input_stream_close(stream, NULL, NULL);
 
-  // Mapper
-  uint8_t mapper = header.mapper_high << 4 | header.mapper_low;
+  // Mapper number
+  uint8_t mapper_no = header.mapper_high << 4 | header.mapper_low;
 
   // Mirroring
   Mirror mirror;
@@ -100,17 +85,37 @@ Cartridge * cartridge_create(GFile * rom_file) {
     mirror = MIRROR_HORIZONTAL;
   }
 
+  Cartridge * cartridge = g_malloc(sizeof(Cartridge));
+  cartridge->mapper_no = mapper_no;
   cartridge->prg_rom = prg_rom;
   cartridge->chr_rom = chr_rom;
   cartridge->prg_rom_size = prg_rom_size;
   cartridge->chr_rom_size = chr_rom_size;
-  cartridge->mapper = mapper;
   cartridge->mirror = mirror;
   cartridge->prg_ram = header.prg_ram;
+
+  cartridge->mapper = mapper_create(cartridge);
+  if (!cartridge->mapper) {
+    g_free(cartridge->prg_rom);
+    g_free(cartridge->chr_rom);
+    g_free(cartridge);
+    return NULL;
+  }
 
   return cartridge;
 }
 
+void cartridge_destroy(Cartridge * cartridge) {
+  mapper_destroy(cartridge->mapper);
+  g_free(cartridge->prg_rom);
+  g_free(cartridge->chr_rom);
+  g_free(cartridge);
+}
+
+void cartridge_write(Cartridge * cartridge, uint16_t addr, uint8_t val) {
+  mapper_write(cartridge->mapper, addr, val);
+}
+
 uint8_t cartridge_read(Cartridge * cartridge, uint16_t addr) {
-  return cartridge->prg_rom[addr % (cartridge->prg_rom_size << 14)];
+  return mapper_read(cartridge->mapper, addr);
 }

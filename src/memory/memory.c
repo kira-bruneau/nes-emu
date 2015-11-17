@@ -35,7 +35,7 @@ uint8_t memory_read(Memory * mem, uint16_t addr) {
     return mem->ram[addr % MEMORY_RAM_SIZE];
 
   } else if (addr >= MEMORY_WAVEFORMS && addr <= MEMORY_WAVEFORMS_END) {
-    return apu_read(memory_apu(mem), addr - MEMORY_WAVEFORMS);
+    return apu_read(memory_apu(mem), APU_WAVEFORMS + (addr - MEMORY_WAVEFORMS));
 
   } else if (addr == MEMORY_APU_STATUS) {
     return apu_read(memory_apu(mem), APU_STATUS);
@@ -43,8 +43,8 @@ uint8_t memory_read(Memory * mem, uint16_t addr) {
   } else if (addr == MEMORY_APU_FRAME_COUNTER) {
     return apu_read(memory_apu(mem), APU_FRAME_COUNTER);
 
-  } else if (addr > MEMORY_ROM && memory_cartridge(mem) != NULL) {
-    return cartridge_read(memory_cartridge(mem), addr - MEMORY_ROM);
+  } else if (addr > MEMORY_CARTRIDGE && memory_cartridge(mem) != NULL) {
+    return cartridge_read(memory_cartridge(mem), addr);
   }
 
   return 0;
@@ -55,7 +55,7 @@ void memory_write(Memory * mem, uint16_t addr, uint8_t val) {
     mem->ram[addr % MEMORY_RAM_SIZE] = val;
 
   } else if (addr >= MEMORY_WAVEFORMS && addr <= MEMORY_WAVEFORMS_END) {
-    apu_write(memory_apu(mem), addr - MEMORY_WAVEFORMS, val);
+    apu_write(memory_apu(mem), APU_WAVEFORMS + (addr - MEMORY_WAVEFORMS), val);
 
   } else if (addr == MEMORY_APU_STATUS) {
     apu_write(memory_apu(mem), APU_STATUS, val);

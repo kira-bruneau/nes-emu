@@ -21,8 +21,8 @@
 #define MEMORY_APU_STATUS 0x4015
 #define MEMORY_APU_FRAME_COUNTER 0x4017
 
-#define MEMORY_ROM 0x8000
-#define MEMORY_ROM_END 0xFFFF
+#define MEMORY_CARTRIDGE 0x4020
+#define MEMORY_CARTRIDGE_END 0xFFFF
 
 typedef struct Memory Memory;
 struct Memory {
