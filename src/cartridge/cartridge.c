@@ -55,7 +55,7 @@ Cartridge * cartridge_create(GFile * rom_file) {
   uint8_t * prg_rom;
   uint8_t prg_rom_size = header.prg_rom_size;
   if (prg_rom_size != 0) {
-    prg_rom = g_malloc(prg_rom_size << 14);
+    prg_rom = g_malloc0(prg_rom_size << 14);
     g_input_stream_read(stream, prg_rom, prg_rom_size << 14, NULL, NULL);
   } else {
     prg_rom = NULL;
@@ -65,7 +65,7 @@ Cartridge * cartridge_create(GFile * rom_file) {
   void * chr_rom;
   uint8_t chr_rom_size = header.chr_rom_size;
   if (chr_rom_size != 0) {
-    chr_rom = g_malloc(chr_rom_size << 13);
+    chr_rom = g_malloc0(chr_rom_size << 13);
     g_input_stream_read(stream, chr_rom, chr_rom_size << 13, NULL, NULL);
   } else {
     chr_rom = NULL;
@@ -90,6 +90,7 @@ Cartridge * cartridge_create(GFile * rom_file) {
   cartridge->mapper_no = mapper_no;
   cartridge->prg_rom = prg_rom;
   cartridge->chr_rom = chr_rom;
+  cartridge->save_ram = g_malloc0(0x2000);
   cartridge->prg_rom_size = prg_rom_size;
   cartridge->chr_rom_size = chr_rom_size;
   cartridge->mirror = mirror;
