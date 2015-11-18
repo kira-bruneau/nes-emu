@@ -11,4 +11,7 @@ void nes_init(NES * nes) {
 
 void nes_load(NES * nes, Cartridge * cartridge) {
   nes->cartridge = cartridge;
+  memory_reset(&nes->mem);
+  cpu_reset(&nes->cpu);
+  apu_reset(&nes->apu);
 }

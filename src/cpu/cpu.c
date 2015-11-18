@@ -48,8 +48,7 @@ void cpu_init(CPU * cpu) {
 void cpu_reset(CPU * cpu) {
   cpu->clock = 0;
 
-  // Should be initalized from reset vector ($FFFC-$FFFD)
-  cpu->pc = 0xC000;
+  cpu->pc = cpu_memory_read16(cpu, 0xFFFC);
   cpu->sp = 0xFD;
   cpu->a = 0;
   cpu->x = 0;
@@ -984,6 +983,11 @@ void cpu_debug_test(CPU * cpu, const char * buffer) {
   }
 
   cpu_debug_reset(cpu, buffer);
+
+  // Nestest must start at 0xC000 but the
+  // reset vector is 0xC0004 for some reason
+  cpu->pc = 0xC000;
+
   printf("\n");
 
   int lineno = 1;
