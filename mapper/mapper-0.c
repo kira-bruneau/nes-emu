@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "mapper.h"
+#include "mapper/mapper.h"
 
 struct Mapper {
   Cartridge * cartridge;
@@ -18,12 +18,21 @@ void mapper_destroy(Mapper * mapper) {
 }
 
 void mapper_write(Mapper * mapper, uint16_t addr, uint8_t val) {
-  (void)mapper;
-  (void)addr;
-  (void)val;
+  // TODO: CHR_RAM
+  Cartridge * cartridge = mapper->cartridge;
+  if (addr >= 0x6000 && addr <= 0x7FFF) {
+    cartridge->save_ram[addr - 0x6000] = val;
+  }
 }
 
 uint8_t mapper_read(Mapper * mapper, uint16_t addr) {
+  // TODO: CHR_RAM
   Cartridge * cartridge = mapper->cartridge;
-  return cartridge->prg_rom[addr % (cartridge->prg_rom_size << 14)];
+  if (addr >= 0x6000 && addr <= 0x7FFF) {
+    return cartridge->save_ram[addr - 0x6000];
+  } else if (addr >= 0x8000) {
+    return cartridge->prg_rom[(addr - 0x8000) % (cartridge->prg_rom_size << 14)];
+  }
+
+  return 0;
 }

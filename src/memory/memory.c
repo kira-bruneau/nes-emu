@@ -43,8 +43,11 @@ uint8_t memory_read(Memory * mem, uint16_t addr) {
   } else if (addr == MEMORY_APU_FRAME_COUNTER) {
     return apu_read(memory_apu(mem), APU_FRAME_COUNTER);
 
-  } else if (addr > MEMORY_CARTRIDGE && memory_cartridge(mem) != NULL) {
-    return cartridge_read(memory_cartridge(mem), addr);
+  } else if (addr >= MEMORY_CARTRIDGE) {
+    Cartridge * cartridge = memory_cartridge(mem);
+    if (cartridge) {
+      return cartridge_read(cartridge, addr);
+    }
   }
 
   return 0;
@@ -62,5 +65,11 @@ void memory_write(Memory * mem, uint16_t addr, uint8_t val) {
 
   } else if (addr == MEMORY_APU_FRAME_COUNTER) {
     apu_write(memory_apu(mem), APU_FRAME_COUNTER, val);
+
+  } else if (addr >= MEMORY_CARTRIDGE) {
+    Cartridge * cartridge = memory_cartridge(mem);
+    if (cartridge) {
+      cartridge_write(cartridge, addr, val);
+    }
   }
 }
