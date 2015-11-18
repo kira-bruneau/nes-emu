@@ -34,7 +34,9 @@ static GModule * mapper_load(int mapper_no) {
   asprintf(&mapper_file, "./mapper/mapper-%i", mapper_no);
 
   // Try to load the module
-  GModule * module = g_module_open(mapper_file, G_MODULE_BIND_LAZY);
+  // TODO: DEBUG
+  /* GModule * module = g_module_open(mapper_file, G_MODULE_BIND_LAZY); */
+  GModule * module = NULL;
 
   // Otherwise, try to compile mapper source code and try again
   if (!module) {

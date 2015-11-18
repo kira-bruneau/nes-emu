@@ -14,4 +14,6 @@ void nes_load(NES * nes, Cartridge * cartridge) {
   memory_reset(&nes->mem);
   cpu_reset(&nes->cpu);
   apu_reset(&nes->apu);
+  // TODO: DEBUG
+  cpu_debug(&nes->cpu);
 }
