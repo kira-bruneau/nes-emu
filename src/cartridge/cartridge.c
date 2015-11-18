@@ -4,6 +4,7 @@
 #include <glib.h>
 
 #include "cartridge.h"
+#include "cartridge.r"
 #include "mapper/mapper.h"
 
 typedef struct NESHeader {

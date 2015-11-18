@@ -2,7 +2,7 @@
 #define MAPPER_H
 
 #include <stdint.h>
-#include "cartridge/cartridge.h"
+#include "cartridge/cartridge.r"
 
 typedef struct Mapper Mapper;
 

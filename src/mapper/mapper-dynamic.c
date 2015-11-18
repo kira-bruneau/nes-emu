@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -27,13 +29,35 @@ struct {
   {"mapper_read", offsetof(Mapper, read)}
 };
 
+static GModule * mapper_load(int mapper_no) {
+  char * mapper_file;
+  asprintf(&mapper_file, "./mapper/mapper-%i", mapper_no);
+
+  // Try to load the module
+  GModule * module = g_module_open(mapper_file, G_MODULE_BIND_LAZY);
+
+  // Otherwise, try to compile mapper source code and try again
+  if (!module) {
+    char * compile_command;
+    asprintf(&compile_command,
+             "gcc -fPIC -shared -I./src -o %s.so %s.c",
+             mapper_file, mapper_file);
+
+    printf("%s\n", compile_command);
+    if (system(compile_command) == 0) {
+      module = g_module_open(mapper_file, G_MODULE_BIND_LAZY);
+    }
+  }
+
+  free(mapper_file);
+  return module;
+}
+
 Mapper * mapper_create(Cartridge * cartridge) {
   Mapper * mapper = g_malloc(sizeof(Mapper));
   int mapper_no = cartridge->mapper_no;
 
-  char mapper_file[32];
-  snprintf(mapper_file, ARRAY_LENGTH(mapper_file), "./mapper/%i", mapper_no);
-  mapper->module = g_module_open(mapper_file, G_MODULE_BIND_LAZY);
+  mapper->module = mapper_load(mapper_no);
   if (!mapper->module) {
     fprintf(stderr, "Failed to load mapper #%i\n", mapper_no);
     g_free(mapper);

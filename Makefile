@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -I./src -g -Wall -Wextra -Wstrict-prototypes
 
 SRCS = main nes clock
-SRCS += cpu/cpu memory/memory cartridge/cartridge mapper/mapper
+SRCS += cpu/cpu memory/memory cartridge/cartridge mapper/mapper-dynamic
 SRCS += apu/apu apu/length-table apu/pulse apu/triangle apu/noise apu/dmc
 SRCS += ui/ui ui/video ui/audio ui/events
 
@@ -12,7 +12,7 @@ CFLAGS += $(shell pkg-config --cflags $(PKGCONFIG))
 LDFLAGS += $(shell pkg-config --libs $(PKGCONFIG))
 
 .PHONY: all
-all: main mappers
+all: main
 
 # Main
 .PHONY: main
@@ -20,18 +20,6 @@ main: bin/main
 bin/main: $(addprefix obj/, $(addsuffix .o, $(SRCS)))
 	@mkdir -p $(shell dirname $@)
 	$(CC) $(LDFLAGS) $^ -o $@
-
-# Mappers
-.PHONY: mappers
-mappers: mapper/0.so
-
-mapper/%.so: obj/mapper/mapper-%.o
-	@mkdir -p $(shell dirname $@)
-	$(CC) $(LDFLAGS) -shared $^ -o $@
-
-obj/mapper/mapper-%.o: src/mapper/mapper-%.c
-	@mkdir -p $(shell dirname $@)
-	$(CC) $(CFLAGS) -fPIC -MMD -c $< -o $@
 
 # Generic rule to build object files #
 obj/%.o: src/%.c
@@ -47,4 +35,4 @@ run: all
 
 .PHONY: clean
 clean:
-	rm -rf obj bin mapper
+	rm -rf obj bin mapper/*.so
