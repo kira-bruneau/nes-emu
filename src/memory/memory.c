@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 
 #include "memory.h"
 
@@ -48,6 +49,8 @@ uint8_t memory_read(Memory * mem, uint16_t addr) {
     if (cartridge) {
       return cartridge_read(cartridge, addr);
     }
+  } else {
+    assert(false);
   }
 
   return 0;
@@ -71,5 +74,7 @@ void memory_write(Memory * mem, uint16_t addr, uint8_t val) {
     if (cartridge) {
       cartridge_write(cartridge, addr, val);
     }
+  } else {
+    assert(false);
   }
 }
